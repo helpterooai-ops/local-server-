@@ -19,7 +19,7 @@ dependencies:
   shelf_static: ^1.1.2
   
   # بوتات تيليجرام
-  teledart: ^0.5.0
+  teledart: ^0.6.1
   
   # نظام الملفات والتخزين
   path_provider: ^2.1.3
