@@ -16,22 +16,18 @@ class PocketCloudApp extends StatelessWidget {
       title: 'Pocket Cloud Host',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // استخدام نظام ألوان هادئ يعتمد على لون واحد
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1E3A8A), // أزرق ملكي هادئ
+          seedColor: const Color(0xFF1E3A8A),
           brightness: Brightness.light,
         ).copyWith(
-          // لون التمييز (Accent) واحد أنيق وجذاب
-          secondary: const Color(0xFFD4AF37), // ذهبي هادئ
+          secondary: const Color(0xFFD4AF37),
         ),
-        // استخدام خط "Cairo" العربي الحديث في كل عناصر الواجهة
         textTheme: GoogleFonts.cairoTextTheme(
           Theme.of(context).textTheme,
         ).apply(
-          bodyColor: const Color(0xFF2D3748), // نص داكن ناعم
+          bodyColor: const Color(0xFF2D3748),
           displayColor: const Color(0xFF1A202C),
         ),
-        // تخصيص بعض العناصر الأساسية للفخامة والبساطة
         appBarTheme: const AppBarTheme(
           elevation: 0,
           centerTitle: true,
@@ -52,13 +48,11 @@ class PocketCloudApp extends StatelessWidget {
           color: Colors.white,
           shadowColor: const Color(0xFF1E3A8A).withValues(alpha: 0.05),
         ),
-        scaffoldBackgroundColor: const Color(0xFFF7F9FC), // خلفية هادئة جداً
+        scaffoldBackgroundColor: const Color(0xFFF7F9FC),
         useMaterial3: true,
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
-            // انتقالات سلسة وهادئة بين الصفحات
             TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
           },
         ),
       ),
