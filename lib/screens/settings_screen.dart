@@ -14,7 +14,7 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'الإعدادات',
-          style: GoogleFonts.cairo(
+          style: GoogleFonts.ibmPlexSansArabic(
             textStyle: textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
@@ -36,7 +36,7 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 24),
               Text(
                 'الإعدادات',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.ibmPlexSansArabic(
                   textStyle: textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: colorScheme.onSurface,
@@ -47,7 +47,7 @@ class SettingsScreen extends StatelessWidget {
               Text(
                 'سيتم إضافة خيارات الإعدادات والتحكم\nبالتطبيق لاحقاً.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.ibmPlexSansArabic(
                   textStyle: textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurface.withValues(alpha: 0.5),
                   ),

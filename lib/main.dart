@@ -22,7 +22,8 @@ class PocketCloudApp extends StatelessWidget {
         ).copyWith(
           secondary: const Color(0xFFD4AF37),
         ),
-        textTheme: GoogleFonts.cairoTextTheme(
+        // استخدام IBM Plex Sans Arabic في جميع النصوص
+        textTheme: GoogleFonts.ibmPlexSansArabicTextTheme(
           Theme.of(context).textTheme,
         ).apply(
           bodyColor: const Color(0xFF2D3748),
@@ -34,7 +35,7 @@ class PocketCloudApp extends StatelessWidget {
           backgroundColor: Colors.transparent,
           foregroundColor: Color(0xFF1A202C),
           titleTextStyle: TextStyle(
-            fontFamily: 'Cairo',
+            fontFamily: 'IBM Plex Sans Arabic',
             fontSize: 20,
             fontWeight: FontWeight.w600,
             color: Color(0xFF1A202C),

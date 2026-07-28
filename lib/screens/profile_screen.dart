@@ -14,7 +14,7 @@ class ProfileScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'الملف الشخصي',
-          style: GoogleFonts.cairo(
+          style: GoogleFonts.ibmPlexSansArabic(
             textStyle: textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
@@ -56,7 +56,7 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'المستخدم',
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.ibmPlexSansArabic(
                       textStyle: textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurface,
@@ -66,7 +66,7 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'مستضيف سحابي',
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.ibmPlexSansArabic(
                       textStyle: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
@@ -81,7 +81,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: const Icon(Icons.edit_outlined, size: 18),
                     label: Text(
                       'تعديل الملف الشخصي',
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.ibmPlexSansArabic(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -165,7 +165,7 @@ class ProfileScreen extends StatelessWidget {
                 children: [
                   Text(
                     'معلومات الحساب',
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.ibmPlexSansArabic(
                       textStyle: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurface,
@@ -224,7 +224,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               value,
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.ibmPlexSansArabic(
                 textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: Theme.of(context).colorScheme.onSurface,
@@ -234,7 +234,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.ibmPlexSansArabic(
                 textStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
@@ -258,7 +258,7 @@ class ProfileScreen extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.cairo(
+          style: GoogleFonts.ibmPlexSansArabic(
             textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
@@ -266,7 +266,7 @@ class ProfileScreen extends StatelessWidget {
         ),
         Text(
           value,
-          style: GoogleFonts.cairo(
+          style: GoogleFonts.ibmPlexSansArabic(
             textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.onSurface,
@@ -309,7 +309,7 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 20),
               Text(
                 'تعديل الملف الشخصي',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.ibmPlexSansArabic(
                   textStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurface,
@@ -321,7 +321,7 @@ class ProfileScreen extends StatelessWidget {
               TextField(
                 decoration: InputDecoration(
                   labelText: 'الاسم الكامل',
-                  labelStyle: GoogleFonts.cairo(),
+                  labelStyle: GoogleFonts.ibmPlexSansArabic(),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -332,7 +332,7 @@ class ProfileScreen extends StatelessWidget {
               TextField(
                 decoration: InputDecoration(
                   labelText: 'البريد الإلكتروني',
-                  labelStyle: GoogleFonts.cairo(),
+                  labelStyle: GoogleFonts.ibmPlexSansArabic(),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -356,7 +356,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   child: Text(
                     'حفظ التغييرات',
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.ibmPlexSansArabic(
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                     ),

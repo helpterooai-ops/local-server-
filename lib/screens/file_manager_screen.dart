@@ -14,7 +14,7 @@ class FileManagerScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'مدير الملفات',
-          style: GoogleFonts.cairo(
+          style: GoogleFonts.ibmPlexSansArabic(
             textStyle: textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
@@ -36,7 +36,7 @@ class FileManagerScreen extends StatelessWidget {
               const SizedBox(height: 24),
               Text(
                 'مدير الملفات السحابي',
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.ibmPlexSansArabic(
                   textStyle: textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: colorScheme.onSurface,
@@ -47,7 +47,7 @@ class FileManagerScreen extends StatelessWidget {
               Text(
                 'سيتم إضافة إمكانية رفع وتخزين ومشاركة\nالملفات مع التحكم الكامل بالخصوصية.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.cairo(
+                style: GoogleFonts.ibmPlexSansArabic(
                   textStyle: textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
@@ -61,7 +61,7 @@ class FileManagerScreen extends StatelessWidget {
                 icon: const Icon(Icons.upload_file, size: 18),
                 label: Text(
                   'رفع ملف جديد',
-                  style: GoogleFonts.cairo(fontWeight: FontWeight.w600),
+                  style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w600),
                 ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: colorScheme.primary,

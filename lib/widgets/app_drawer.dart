@@ -47,7 +47,7 @@ class AppDrawer extends StatelessWidget {
                   const SizedBox(height: 14),
                   Text(
                     'المستخدم',
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.ibmPlexSansArabic(
                       textStyle: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurface,
@@ -57,7 +57,7 @@ class AppDrawer extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     'مستضيف سحابي',
-                    style: GoogleFonts.cairo(
+                    style: GoogleFonts.ibmPlexSansArabic(
                       textStyle: textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
@@ -181,7 +181,7 @@ class AppDrawer extends StatelessWidget {
         leading: Icon(icon, color: effectiveIconColor, size: 22),
         title: Text(
           title,
-          style: GoogleFonts.cairo(
+          style: GoogleFonts.ibmPlexSansArabic(
             textStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w500,
                   color: effectiveTextColor,

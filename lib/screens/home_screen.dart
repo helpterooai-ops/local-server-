@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(
           'لوحة التحكم',
-          style: GoogleFonts.cairo(
+          style: GoogleFonts.ibmPlexSansArabic(
             textStyle: textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
               color: colorScheme.onSurface,
@@ -55,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               'مرحباً بك،',
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.ibmPlexSansArabic(
                 textStyle: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: colorScheme.onSurface,
@@ -65,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 4),
             Text(
               'منصة الاستضافة السحابية في جيبك',
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.ibmPlexSansArabic(
                 textStyle: textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
@@ -98,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 32),
             Text(
               'الخدمات',
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.ibmPlexSansArabic(
                 textStyle: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: colorScheme.onSurface,
@@ -196,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 12),
             Text(
               title,
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.ibmPlexSansArabic(
                 textStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.6),
                       fontWeight: FontWeight.w500,
@@ -206,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 4),
             Text(
               value,
-              style: GoogleFonts.cairo(
+              style: GoogleFonts.ibmPlexSansArabic(
                 textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: valueColor,
@@ -255,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   'الروابط الحية النشطة',
-                  style: GoogleFonts.cairo(
+                  style: GoogleFonts.ibmPlexSansArabic(
                     textStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: colorScheme.onSurface,
@@ -265,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 2),
                 Text(
                   '$_activeTunnels روابط | لا توجد روابط نشطة',
-                  style: GoogleFonts.cairo(
+                  style: GoogleFonts.ibmPlexSansArabic(
                     textStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
@@ -324,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text(
                       title,
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.ibmPlexSansArabic(
                         textStyle:
                             Theme.of(context).textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.w700,
@@ -335,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: GoogleFonts.cairo(
+                      style: GoogleFonts.ibmPlexSansArabic(
                         textStyle:
                             Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: Theme.of(context)
