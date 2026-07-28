@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -66,7 +67,6 @@ class PocketCloudApp extends StatelessWidget {
   }
 }
 
-// بوابة تحدد إذا كان المستخدم مسجل دخوله أم لا
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -75,11 +75,9 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // إذا كان المستخدم مسجلاً دخوله، انتقل للرئيسية
         if (snapshot.hasData) {
           return const HomeScreen();
         }
-        // غير ذلك، اذهب لصفحة تسجيل الدخول
         return const LoginScreen();
       },
     );
