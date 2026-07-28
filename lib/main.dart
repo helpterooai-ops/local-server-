@@ -29,16 +29,16 @@ class PocketCloudApp extends StatelessWidget {
           bodyColor: const Color(0xFF2D3748),
           displayColor: const Color(0xFF1A202C),
         ),
-        appBarTheme: const AppBarTheme(
+        appBarTheme: AppBarTheme(
           elevation: 0,
           centerTitle: true,
           backgroundColor: Colors.transparent,
-          foregroundColor: Color(0xFF1A202C),
-          titleTextStyle: TextStyle(
-            fontFamily: 'IBM Plex Sans Arabic',
+          foregroundColor: const Color(0xFF1A202C),
+          // ✅ تم تصحيح طريقة استدعاء الخط هنا
+          titleTextStyle: GoogleFonts.ibmPlexSansArabic(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF1A202C),
+            color: const Color(0xFF1A202C),
           ),
         ),
         cardTheme: CardThemeData(
