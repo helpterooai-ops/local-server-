@@ -52,7 +52,8 @@ class PocketCloudApp extends StatelessWidget {
         splashFactory: InkRipple.splashFactory,
         highlightColor: const Color(0xFF1E3A8A).withValues(alpha: 0.05),
         splashColor: const Color(0xFF1E3A8A).withValues(alpha: 0.1),
-        pageTransitionsTheme: const PageTransitionsTheme(
+        // تم إزالة const من هنا
+        pageTransitionsTheme: PageTransitionsTheme(
           builders: {
             TargetPlatform.android: CupertinoPageTransitionsBuilder(),
           },
