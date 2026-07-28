@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/app_drawer.dart';
+import 'web_hosting_screen.dart';
+import 'telegram_bots_screen.dart';
+import 'file_manager_screen.dart';
+import 'live_tunnels_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,9 +14,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _isServerRunning = false;
-  final double _storageUsed = 2.4;
-  final int _activeTunnels = 3;
+  // جميع القيم صفرية حتى يتم ربطها بالخدمات الحقيقية لاحقاً
+  final bool _isServerRunning = false;
+  final double _storageUsed = 0.0; // GB
+  final int _activeTunnels = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // القائمة الجانبية الفخمة
       drawer: const AppDrawer(),
       appBar: AppBar(
         title: Text(
@@ -83,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildStatCard(
                   context,
                   title: 'المساحة المستخدمة',
-                  value: '$_storageUsed GB',
+                  value: '${_storageUsed.toStringAsFixed(1)} GB',
                   icon: Icons.cloud_outlined,
                   valueColor: colorScheme.onSurface,
                 ),
@@ -108,7 +112,12 @@ class _HomeScreenState extends State<HomeScreen> {
               title: 'محرر الأكواد',
               subtitle: 'استضافة مواقع ويب تفاعلية',
               color: const Color(0xFF3182CE),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const WebHostingScreen()),
+                );
+              },
             ),
             const SizedBox(height: 12),
             _buildFeatureCard(
@@ -117,7 +126,12 @@ class _HomeScreenState extends State<HomeScreen> {
               title: 'بوتات تيليجرام',
               subtitle: 'تشغيل بوتات محلية في الخلفية',
               color: const Color(0xFF00A3C4),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TelegramBotsScreen()),
+                );
+              },
             ),
             const SizedBox(height: 12),
             _buildFeatureCard(
@@ -126,7 +140,12 @@ class _HomeScreenState extends State<HomeScreen> {
               title: 'مدير الملفات',
               subtitle: 'رفع، تخزين، ومشاركة الملفات',
               color: const Color(0xFFDD6B20),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const FileManagerScreen()),
+                );
+              },
             ),
             const SizedBox(height: 12),
             _buildFeatureCard(
@@ -135,7 +154,12 @@ class _HomeScreenState extends State<HomeScreen> {
               title: 'الأنفاق الحية',
               subtitle: 'روابط عامة مع مؤقت تدمير ذاتي',
               color: const Color(0xFF2F855A),
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LiveTunnelsScreen()),
+                );
+              },
             ),
           ],
         ),
@@ -240,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$_activeTunnels روابط | أطول مدة: 2ساعة و 45دقيقة',
+                  '$_activeTunnels روابط | لا توجد روابط نشطة',
                   style: GoogleFonts.cairo(
                     textStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -254,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 40,
             height: 40,
             child: CircularProgressIndicator(
-              value: 0.65,
+              value: 0.0, // لا توجد روابط
               strokeWidth: 3.5,
               backgroundColor: colorScheme.outlineVariant,
               valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFD4AF37)),

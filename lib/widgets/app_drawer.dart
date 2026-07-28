@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../screens/profile_screen.dart';
+import '../screens/settings_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -16,7 +18,7 @@ class AppDrawer extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // بطاقة المستخدم المصغرة في الأعلى
+            // بطاقة المستخدم المصغرة
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
@@ -33,7 +35,6 @@ class AppDrawer extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // صورة المستخدم
                   CircleAvatar(
                     radius: 28,
                     backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
@@ -45,7 +46,7 @@ class AppDrawer extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'محمد أحمد',
+                    'المستخدم',
                     style: GoogleFonts.cairo(
                       textStyle: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -55,7 +56,7 @@ class AppDrawer extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'مطور ومستضيف سحابي',
+                    'مستضيف سحابي',
                     style: GoogleFonts.cairo(
                       textStyle: textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.5),
@@ -80,11 +81,23 @@ class AppDrawer extends StatelessWidget {
             ),
             _buildDrawerItem(
               context,
+              icon: Icons.person_outline,
+              title: 'الملف الشخصي',
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                );
+              },
+            ),
+            _buildDrawerItem(
+              context,
               icon: Icons.dns_outlined,
               title: 'إدارة الاستضافات',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: الانتقال لصفحة الاستضافات
+                // TODO: الانتقال لصفحة الاستضافات مستقبلاً
               },
             ),
             _buildDrawerItem(
@@ -93,7 +106,7 @@ class AppDrawer extends StatelessWidget {
               title: 'الملفات السحابية',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: الانتقال لمدير الملفات
+                // TODO: الانتقال لمدير الملفات مستقبلاً
               },
             ),
             _buildDrawerItem(
@@ -102,7 +115,7 @@ class AppDrawer extends StatelessWidget {
               title: 'الروابط الحية',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: الانتقال للأنفاق
+                // TODO: الانتقال للأنفاق مستقبلاً
               },
             ),
             const Spacer(),
@@ -116,7 +129,10 @@ class AppDrawer extends StatelessWidget {
               title: 'الإعدادات',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: الانتقال للإعدادات
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                );
               },
             ),
             _buildDrawerItem(
@@ -125,7 +141,7 @@ class AppDrawer extends StatelessWidget {
               title: 'تخصيص المظهر',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: فتح مخصص المظهر
+                // TODO: فتح مخصص المظهر مستقبلاً
               },
             ),
             _buildDrawerItem(
@@ -136,7 +152,7 @@ class AppDrawer extends StatelessWidget {
               iconColor: const Color(0xFFE53E3E),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: عملية تسجيل الخروج
+                // TODO: عملية تسجيل الخروج مستقبلاً
               },
             ),
             const SizedBox(height: 20),

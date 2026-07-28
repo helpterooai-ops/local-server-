@@ -55,7 +55,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'محمد أحمد',
+                    'المستخدم',
                     style: GoogleFonts.cairo(
                       textStyle: textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -65,7 +65,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'مطور ومستضيف سحابي',
+                    'مستضيف سحابي',
                     style: GoogleFonts.cairo(
                       textStyle: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.5),
@@ -103,13 +103,13 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // بطاقات الإحصائيات
+            // بطاقات الإحصائيات - جميع القيم صفرية
             Row(
               children: [
                 _buildStatItem(
                   context,
                   icon: Icons.visibility_outlined,
-                  value: '1,245',
+                  value: '0',
                   label: 'زيارة للروابط',
                   color: const Color(0xFF3182CE),
                 ),
@@ -117,7 +117,7 @@ class ProfileScreen extends StatelessWidget {
                 _buildStatItem(
                   context,
                   icon: Icons.upload_file_outlined,
-                  value: '48',
+                  value: '0',
                   label: 'ملف مرفوع',
                   color: const Color(0xFFDD6B20),
                 ),
@@ -129,7 +129,7 @@ class ProfileScreen extends StatelessWidget {
                 _buildStatItem(
                   context,
                   icon: Icons.link_outlined,
-                  value: '12',
+                  value: '0',
                   label: 'رابط حي نشط',
                   color: const Color(0xFF2F855A),
                 ),
@@ -137,7 +137,7 @@ class ProfileScreen extends StatelessWidget {
                 _buildStatItem(
                   context,
                   icon: Icons.storage_outlined,
-                  value: '2.4 GB',
+                  value: '0.0 GB',
                   label: 'مساحة مستخدمة',
                   color: const Color(0xFF00A3C4),
                 ),
@@ -145,7 +145,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // معلومات الحساب
+            // معلومات الحساب - قيم فارغة جاهزة للتعبئة
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -173,13 +173,13 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildInfoRow(context, label: 'البريد الإلكتروني', value: 'mohammed@example.com'),
+                  _buildInfoRow(context, label: 'البريد الإلكتروني', value: '—'),
                   const Divider(height: 24),
-                  _buildInfoRow(context, label: 'رقم الهاتف', value: '+966 50 123 4567'),
+                  _buildInfoRow(context, label: 'رقم الهاتف', value: '—'),
                   const Divider(height: 24),
-                  _buildInfoRow(context, label: 'تاريخ الانضمام', value: '12 يناير 2024'),
+                  _buildInfoRow(context, label: 'تاريخ الانضمام', value: '—'),
                   const Divider(height: 24),
-                  _buildInfoRow(context, label: 'نوع الحساب', value: 'متميز'),
+                  _buildInfoRow(context, label: 'نوع الحساب', value: 'أساسي'),
                 ],
               ),
             ),
@@ -189,7 +189,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // عنصر إحصائية واحد
+  // عنصر إحصائية واحد (مصفر)
   Widget _buildStatItem(
     BuildContext context, {
     required IconData icon,
@@ -247,7 +247,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // صف معلومات
+  // صف معلومات بسيط
   Widget _buildInfoRow(
     BuildContext context, {
     required String label,
@@ -277,7 +277,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // نافذة تعديل الملف الشخصي
+  // نافذة تعديل الملف الشخصي (نظيفة بدون بيانات وهمية)
   void _showEditProfileSheet(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
@@ -317,6 +317,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
+              // حقول فارغة
               TextField(
                 decoration: InputDecoration(
                   labelText: 'الاسم الكامل',
