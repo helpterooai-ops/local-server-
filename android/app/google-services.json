@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "377022956334",
+    "project_id": "servant-a9c48",
+    "storage_bucket": "servant-a9c48.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:377022956334:android:d29076ef8d0a314f1df0bf",
+        "android_client_info": {
+          "package_name": "com.helpterooai.local_server"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwJ_TcGgAdJ3X4-dQBpG3Nd3yZD-zUWHg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

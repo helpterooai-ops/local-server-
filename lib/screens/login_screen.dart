@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'home_screen.dart';
+import '../services/auth_service.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,8 +14,10 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -22,13 +26,58 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    // TODO: سيتم إضافة منطق التحقق من البريد وكلمة المرور لاحقاً
-    // حالياً: انتقال مباشر للصفحة الرئيسية للتجربة
-    Navigator.pushReplacement(
+  Future<void> _handleLogin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await _authService.signIn(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'user-not-found':
+          message = 'لا يوجد حساب بهذا البريد الإلكتروني.';
+          break;
+        case 'wrong-password':
+          message = 'كلمة المرور غير صحيحة.';
+          break;
+        case 'invalid-email':
+          message = 'صيغة البريد الإلكتروني غير صحيحة.';
+          break;
+        case 'invalid-credential':
+          message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+          break;
+        default:
+          message = 'حدث خطأ. حاول مرة أخرى.';
+      }
+      setState(() {
+        _errorMessage = message;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'تعذر الاتصال بالخادم. تأكد من اتصالك بالإنترنت.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // فتح صفحة التسجيل وانتظار البريد المرجوع
+  Future<void> _goToRegister() async {
+    final email = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      MaterialPageRoute(builder: (context) => const RegisterScreen()),
     );
+    if (email != null && email is String && email.isNotEmpty) {
+      _emailController.text = email;
+    }
   }
 
   @override
@@ -45,7 +94,6 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 48),
-              // أيقونة التطبيق
               Center(
                 child: Container(
                   width: 80,
@@ -62,7 +110,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              // عنوان الترحيب
               Text(
                 'أهلاً بعودتك',
                 style: GoogleFonts.ibmPlexSansArabic(
@@ -82,7 +129,32 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              // حقل البريد الإلكتروني
+              if (_errorMessage != null)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE53E3E).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline,
+                          color: Color(0xFFE53E3E), size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: GoogleFonts.ibmPlexSansArabic(
+                            color: const Color(0xFFE53E3E),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -114,7 +186,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // حقل كلمة المرور
               TextField(
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
@@ -158,12 +229,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              // نسيت كلمة المرور
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton(
                   onPressed: () {
-                    // TODO: صفحة استعادة كلمة المرور مستقبلاً
+                    // TODO: صفحة استعادة كلمة المرور
                   },
                   child: Text(
                     'نسيت كلمة المرور؟',
@@ -175,7 +245,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              // زر تسجيل الدخول
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -209,7 +278,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              // إنشاء حساب جديد
               Center(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -221,9 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () {
-                        // TODO: صفحة إنشاء حساب جديد مستقبلاً
-                      },
+                      onPressed: _goToRegister,
                       child: Text(
                         'إنشاء حساب',
                         style: GoogleFonts.ibmPlexSansArabic(
