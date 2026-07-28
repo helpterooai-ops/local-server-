@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../screens/profile_screen.dart';
@@ -11,6 +12,7 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final user = FirebaseAuth.instance.currentUser;
 
     return Drawer(
       backgroundColor: Colors.transparent,
@@ -19,9 +21,10 @@ class AppDrawer extends StatelessWidget {
           margin: const EdgeInsets.only(top: 12, bottom: 12, right: 12),
           decoration: BoxDecoration(
             color: Colors.white,
+            // ✅ تم التصحيح: الانحناءات في الجهة الخارجية (اليمنى)
             borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24),
-              bottomLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+              bottomRight: Radius.circular(24),
             ),
             boxShadow: [
               BoxShadow(
@@ -38,8 +41,9 @@ class AppDrawer extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                 decoration: const BoxDecoration(
+                  // ✅ تم التصحيح
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
                   ),
                 ),
                 child: Column(
@@ -56,7 +60,7 @@ class AppDrawer extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      'المستخدم',
+                      user?.displayName ?? 'المستخدم',
                       style: GoogleFonts.ibmPlexSansArabic(
                         textStyle: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
@@ -66,7 +70,7 @@ class AppDrawer extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'مستضيف سحابي',
+                      user?.email ?? 'مستضيف سحابي',
                       style: GoogleFonts.ibmPlexSansArabic(
                         textStyle: textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurface.withValues(alpha: 0.5),
@@ -169,7 +173,10 @@ class AppDrawer extends StatelessWidget {
                 title: 'تسجيل الخروج',
                 textColor: const Color(0xFFE53E3E),
                 iconColor: const Color(0xFFE53E3E),
-                onTap: () => Navigator.pop(context),
+                onTap: () async {
+                  await FirebaseAuth.instance.signOut();
+                  if (context.mounted) Navigator.pop(context);
+                },
               ),
               const SizedBox(height: 20),
             ],

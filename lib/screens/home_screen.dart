@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/app_drawer.dart';
@@ -14,15 +15,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // جميع القيم صفرية حتى يتم ربطها بالخدمات الحقيقية لاحقاً
   final bool _isServerRunning = false;
-  final double _storageUsed = 0.0; // GB
+  final double _storageUsed = 0.0;
   final int _activeTunnels = 0;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -54,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'مرحباً بك،',
+              'مرحباً، ${user?.email?.split('@').first ?? 'المستخدم'} 👋',
               style: GoogleFonts.ibmPlexSansArabic(
                 textStyle: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w600,
@@ -278,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 40,
             height: 40,
             child: CircularProgressIndicator(
-              value: 0.0, // لا توجد روابط
+              value: 0.0,
               strokeWidth: 3.5,
               backgroundColor: colorScheme.outlineVariant,
               valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFD4AF37)),

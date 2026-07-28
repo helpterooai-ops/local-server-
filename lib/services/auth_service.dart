@@ -34,6 +34,14 @@ class AuthService {
     await _auth.signOut();
   }
 
+  // حذف الحساب نهائياً
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      await user.delete();
+    }
+  }
+
   // استعادة كلمة المرور
   Future<void> resetPassword(String email) async {
     await _auth.sendPasswordResetEmail(email: email);
