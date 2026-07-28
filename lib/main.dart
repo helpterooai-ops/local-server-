@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +22,6 @@ class PocketCloudApp extends StatelessWidget {
         ).copyWith(
           secondary: const Color(0xFFD4AF37),
         ),
-        // استخدام IBM Plex Sans Arabic في جميع النصوص
         textTheme: GoogleFonts.ibmPlexSansArabicTextTheme(
           Theme.of(context).textTheme,
         ).apply(
@@ -34,7 +33,6 @@ class PocketCloudApp extends StatelessWidget {
           centerTitle: true,
           backgroundColor: Colors.transparent,
           foregroundColor: const Color(0xFF1A202C),
-          // ✅ تم تصحيح طريقة استدعاء الخط هنا
           titleTextStyle: GoogleFonts.ibmPlexSansArabic(
             fontSize: 20,
             fontWeight: FontWeight.w600,
@@ -51,13 +49,16 @@ class PocketCloudApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFFF7F9FC),
         useMaterial3: true,
+        splashFactory: InkRipple.splashFactory,
+        highlightColor: const Color(0xFF1E3A8A).withValues(alpha: 0.05),
+        splashColor: const Color(0xFF1E3A8A).withValues(alpha: 0.1),
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
-            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
           },
         ),
       ),
-      home: const HomeScreen(),
+      home: const LoginScreen(),
     );
   }
 }

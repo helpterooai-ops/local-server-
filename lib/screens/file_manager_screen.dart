@@ -35,7 +35,7 @@ class FileManagerScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'مدير الملفات السحابي',
+                'مدير الملفات المرجعي',
                 style: GoogleFonts.ibmPlexSansArabic(
                   textStyle: textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w700,
@@ -45,7 +45,7 @@ class FileManagerScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'سيتم إضافة إمكانية رفع وتخزين ومشاركة\nالملفات مع التحكم الكامل بالخصوصية.',
+                'سيتم فهرسة ملفات جهازك مباشرة دون نسخها.\nاختر ما تريد مشاركته عبر الروابط الحية.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.ibmPlexSansArabic(
                   textStyle: textTheme.bodyMedium?.copyWith(
@@ -56,11 +56,11 @@ class FileManagerScreen extends StatelessWidget {
               const SizedBox(height: 32),
               OutlinedButton.icon(
                 onPressed: () {
-                  // TODO: فتح رافع الملفات لاحقاً
+                  // TODO: فتح مستعرض ملفات الجهاز لاختيار ملفات للمشاركة
                 },
-                icon: const Icon(Icons.upload_file, size: 18),
+                icon: const Icon(Icons.folder_open, size: 18),
                 label: Text(
-                  'رفع ملف جديد',
+                  'استعراض ملفات الجهاز',
                   style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w600),
                 ),
                 style: OutlinedButton.styleFrom(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../screens/profile_screen.dart';
 import '../screens/settings_screen.dart';
+import '../screens/server_dashboard_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -12,157 +13,172 @@ class AppDrawer extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Drawer(
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.transparent,
+      backgroundColor: Colors.transparent,
       child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // بطاقة المستخدم المصغرة
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    colorScheme.primary.withValues(alpha: 0.05),
-                    colorScheme.primary.withValues(alpha: 0.02),
+        child: Container(
+          margin: const EdgeInsets.only(top: 12, bottom: 12, right: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              bottomLeft: Radius.circular(24),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.primary.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(4, 0),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
+                      child: Icon(
+                        Icons.person_2_outlined,
+                        size: 30,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'المستخدم',
+                      style: GoogleFonts.ibmPlexSansArabic(
+                        textStyle: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'مستضيف سحابي',
+                      style: GoogleFonts.ibmPlexSansArabic(
+                        textStyle: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
                   ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: colorScheme.primary.withValues(alpha: 0.15),
-                    child: Icon(
-                      Icons.person_2_outlined,
-                      size: 30,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'المستخدم',
-                    style: GoogleFonts.ibmPlexSansArabic(
-                      textStyle: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'مستضيف سحابي',
-                    style: GoogleFonts.ibmPlexSansArabic(
-                      textStyle: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: colorScheme.onSurface.withValues(alpha: 0.1),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
-            const SizedBox(height: 16),
-
-            // عناصر القائمة
-            _buildDrawerItem(
-              context,
-              icon: Icons.dashboard_outlined,
-              title: 'الرئيسية',
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.person_outline,
-              title: 'الملف الشخصي',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                );
-              },
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.dns_outlined,
-              title: 'إدارة الاستضافات',
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: الانتقال لصفحة الاستضافات مستقبلاً
-              },
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.storage_outlined,
-              title: 'الملفات السحابية',
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: الانتقال لمدير الملفات مستقبلاً
-              },
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.link_outlined,
-              title: 'الروابط الحية',
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: الانتقال للأنفاق مستقبلاً
-              },
-            ),
-            const Spacer(),
-
-            // العناصر السفلية
-            const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
-            const SizedBox(height: 8),
-            _buildDrawerItem(
-              context,
-              icon: Icons.settings_outlined,
-              title: 'الإعدادات',
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
-                );
-              },
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.palette_outlined,
-              title: 'تخصيص المظهر',
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: فتح مخصص المظهر مستقبلاً
-              },
-            ),
-            _buildDrawerItem(
-              context,
-              icon: Icons.logout_rounded,
-              title: 'تسجيل الخروج',
-              textColor: const Color(0xFFE53E3E),
-              iconColor: const Color(0xFFE53E3E),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: عملية تسجيل الخروج مستقبلاً
-              },
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 16),
+              _buildDrawerItem(
+                context,
+                icon: Icons.dashboard_outlined,
+                title: 'الرئيسية',
+                onTap: () => Navigator.pop(context),
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.analytics_outlined,
+                title: 'لوحة الخادم',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ServerDashboardScreen()),
+                  );
+                },
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.person_outline,
+                title: 'الملف الشخصي',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                  );
+                },
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.dns_outlined,
+                title: 'إدارة الاستضافات',
+                onTap: () => Navigator.pop(context),
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.storage_outlined,
+                title: 'الملفات السحابية',
+                onTap: () => Navigator.pop(context),
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.link_outlined,
+                title: 'الروابط الحية',
+                onTap: () => Navigator.pop(context),
+              ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: colorScheme.onSurface.withValues(alpha: 0.1),
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildDrawerItem(
+                context,
+                icon: Icons.settings_outlined,
+                title: 'الإعدادات',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  );
+                },
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.palette_outlined,
+                title: 'تخصيص المظهر',
+                onTap: () => Navigator.pop(context),
+              ),
+              _buildDrawerItem(
+                context,
+                icon: Icons.logout_rounded,
+                title: 'تسجيل الخروج',
+                textColor: const Color(0xFFE53E3E),
+                iconColor: const Color(0xFFE53E3E),
+                onTap: () => Navigator.pop(context),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // عنصر قائمة واحد بتصميم هادئ
   Widget _buildDrawerItem(
     BuildContext context, {
     required IconData icon,
