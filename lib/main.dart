@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/verification_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,9 +76,17 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
+        // المستخدم مسجل دخوله
         if (snapshot.hasData) {
-          return const HomeScreen();
+          final user = snapshot.data!;
+          // إذا كان البريد مؤكداً، اذهب للرئيسية
+          if (user.emailVerified) {
+            return const HomeScreen();
+          }
+          // غير ذلك، اذهب لشاشة التحقق
+          return const VerificationScreen();
         }
+        // لا يوجد مستخدم، اذهب لتسجيل الدخول
         return const LoginScreen();
       },
     );

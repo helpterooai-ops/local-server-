@@ -19,6 +19,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   String? _errorMessage;
   String? _emailError;
+  bool _needsVerification = false;
+  bool _isResending = false;
 
   @override
   void dispose() {
@@ -28,7 +30,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   bool _isEmailValid(String email) {
-    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    final emailRegex =
+        RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
     return emailRegex.hasMatch(email.trim());
   }
 
@@ -37,6 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
       _errorMessage = null;
       _emailError = null;
+      _needsVerification = false;
     });
 
     final email = _emailController.text.trim();
@@ -53,33 +57,80 @@ class _LoginScreenState extends State<LoginScreen> {
       await _authService.signIn(email, _passwordController.text.trim());
     } on FirebaseAuthException catch (e) {
       String message;
-      switch (e.code) {
-        case 'user-not-found':
-          message = 'لا يوجد حساب بهذا البريد الإلكتروني.';
-          break;
-        case 'wrong-password':
-          message = 'كلمة المرور غير صحيحة.';
-          break;
-        case 'invalid-email':
-          message = 'صيغة البريد الإلكتروني غير صحيحة.';
-          break;
-        case 'invalid-credential':
+      // التحقق إذا كان الحساب موجوداً لكنه غير مؤكد
+      if (e.code == 'invalid-credential' || e.code == 'wrong-password') {
+        // نحاول إرسال تحقق جديد إذا كان البريد موجوداً
+        try {
+          final methods =
+              await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+          if (methods.isNotEmpty) {
+            setState(() {
+              _needsVerification = true;
+              _errorMessage =
+                  'حسابك غير مؤكد. الرجاء تفقد بريدك الإلكتروني للتحقق.';
+            });
+          } else {
+            message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+            setState(() => _errorMessage = message);
+          }
+        } catch (_) {
           message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
-          break;
-        default:
-          message = 'حدث خطأ. حاول مرة أخرى.';
+          setState(() => _errorMessage = message);
+        }
+      } else {
+        switch (e.code) {
+          case 'user-not-found':
+            message = 'لا يوجد حساب بهذا البريد الإلكتروني.';
+            break;
+          case 'wrong-password':
+            message = 'كلمة المرور غير صحيحة.';
+            break;
+          case 'invalid-email':
+            message = 'صيغة البريد الإلكتروني غير صحيحة.';
+            break;
+          default:
+            message = 'حدث خطأ. حاول مرة أخرى.';
+        }
+        setState(() => _errorMessage = message);
       }
-      setState(() {
-        _errorMessage = message;
-      });
     } catch (e) {
       setState(() {
         _errorMessage = 'تعذر الاتصال بالخادم. تأكد من اتصالك بالإنترنت.';
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _resendVerificationEmail() async {
+    setState(() => _isResending = true);
+    try {
+      await _authService.resendVerificationEmail();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'تم إرسال رابط التحقق. تفقد بريدك الإلكتروني.',
+              style: GoogleFonts.ibmPlexSansArabic(),
+            ),
+            backgroundColor: const Color(0xFF38A169),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'تعذر إرسال رابط التحقق.',
+              style: GoogleFonts.ibmPlexSansArabic(),
+            ),
+            backgroundColor: const Color(0xFFE53E3E),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isResending = false);
     }
   }
 
@@ -148,23 +199,52 @@ class _LoginScreenState extends State<LoginScreen> {
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE53E3E).withValues(alpha: 0.1),
+                    color: _needsVerification
+                        ? const Color(0xFF3182CE).withValues(alpha: 0.1)
+                        : const Color(0xFFE53E3E).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
+                  child: Column(
                     children: [
-                      const Icon(Icons.error_outline,
-                          color: Color(0xFFE53E3E), size: 20),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: GoogleFonts.ibmPlexSansArabic(
-                            color: const Color(0xFFE53E3E),
-                            fontSize: 13,
+                      Row(
+                        children: [
+                          Icon(
+                            _needsVerification
+                                ? Icons.mark_email_unread_outlined
+                                : Icons.error_outline,
+                            color: _needsVerification
+                                ? const Color(0xFF3182CE)
+                                : const Color(0xFFE53E3E),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _errorMessage!,
+                              style: GoogleFonts.ibmPlexSansArabic(
+                                color: _needsVerification
+                                    ? const Color(0xFF3182CE)
+                                    : const Color(0xFFE53E3E),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_needsVerification) ...[
+                        const SizedBox(height: 8),
+                        TextButton.icon(
+                          onPressed: _isResending ? null : _resendVerificationEmail,
+                          icon: const Icon(Icons.refresh, size: 18),
+                          label: Text(
+                            'إعادة إرسال رابط التحقق',
+                            style: GoogleFonts.ibmPlexSansArabic(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -192,7 +272,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: _emailError != null ? const Color(0xFFE53E3E) : colorScheme.primary,
+                      color: _emailError != null
+                          ? const Color(0xFFE53E3E)
+                          : colorScheme.primary,
                       width: 2,
                     ),
                   ),

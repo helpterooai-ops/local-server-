@@ -23,6 +23,8 @@ class AuthService {
         email: email,
         password: password,
       );
+      // إرسال رابط التحقق
+      await result.user?.sendEmailVerification();
       return result.user;
     } catch (e) {
       rethrow;
@@ -39,6 +41,14 @@ class AuthService {
     final user = _auth.currentUser;
     if (user != null) {
       await user.delete();
+    }
+  }
+
+  // إعادة إرسال رابط التحقق
+  Future<void> resendVerificationEmail() async {
+    final user = _auth.currentUser;
+    if (user != null && !user.emailVerified) {
+      await user.sendEmailVerification();
     }
   }
 
