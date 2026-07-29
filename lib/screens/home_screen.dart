@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/app_drawer.dart';
+import '../services/local_server_service.dart';
 import 'web_hosting_screen.dart';
 import 'telegram_bots_screen.dart';
 import 'file_manager_screen.dart';
@@ -25,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final textTheme = Theme.of(context).textTheme;
     final user = FirebaseAuth.instance.currentUser;
     final userName = user?.displayName ?? 'المستخدم';
+    final serverService = LocalServerService();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -55,7 +57,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ✅ ترحيب بالاسم الحقيقي
             Text(
               'مرحباً، $userName 👋',
               style: GoogleFonts.ibmPlexSansArabic(
@@ -80,9 +81,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildStatCard(
                   context,
                   title: 'حالة الخادم',
-                  value: _isServerRunning ? 'يعمل' : 'متوقف',
+                  value: serverService.isRunning ? 'يعمل' : 'متوقف',
                   icon: Icons.dns_outlined,
-                  valueColor: _isServerRunning
+                  valueColor: serverService.isRunning
                       ? const Color(0xFF38A169)
                       : const Color(0xFFE53E3E),
                 ),
@@ -115,6 +116,16 @@ class _HomeScreenState extends State<HomeScreen> {
               title: 'محرر الأكواد',
               subtitle: 'استضافة مواقع ويب تفاعلية',
               color: const Color(0xFF3182CE),
+              trailing: serverService.isRunning
+                  ? Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF38A169),
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                  : null,
               onTap: () {
                 Navigator.push(
                   context,
@@ -298,6 +309,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required String title,
     required String subtitle,
     required Color color,
+    Widget? trailing,
     required VoidCallback onTap,
   }) {
     return Card(
@@ -351,6 +363,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+              if (trailing != null) ...[
+                const SizedBox(width: 8),
+                trailing,
+                const SizedBox(width: 4),
+              ],
               Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 16,
