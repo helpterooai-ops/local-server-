@@ -1,9 +1,10 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
     
-    <!-- صلاحية الإنترنت لضمان عمل الخطوط والخدمات -->
+    <!-- صلاحية الإنترنت -->
     <uses-permission android:name="android.permission.INTERNET"/>
     
-    <!-- صلاحيات تشغيل الخدمة في المقدمة (Foreground Service) -->
+    <!-- صلاحيات تشغيل الخدمة في المقدمة -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
@@ -30,11 +31,12 @@
             </intent-filter>
         </activity>
         
-        <!-- تعريف الخدمة الأمامية لتشغيل الخادم في الخلفية -->
+        <!-- تعريف الخدمة الأمامية مع أمر استبدال قيمة exported -->
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
-            android:foregroundServiceType="specialUse"
-            android:exported="false" />
+            android:foregroundServiceType="dataSync"
+            android:exported="true"
+            tools:replace="android:exported" />
         
         <meta-data
             android:name="flutterEmbedding"
