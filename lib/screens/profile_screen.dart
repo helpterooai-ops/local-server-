@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,11 +14,31 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
   bool _isLoading = false;
+  User? _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    await FirebaseAuth.instance.currentUser?.reload();
+    setState(() {
+      _user = FirebaseAuth.instance.currentUser;
+    });
+  }
 
   Future<void> _handleSignOut() async {
     setState(() => _isLoading = true);
     await _authService.signOut();
-    // AuthGate في main.dart سيعيد التوجيه تلقائياً
+    if (mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    }
   }
 
   Future<void> _handleDeleteAccount() async {
@@ -69,7 +90,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() => _isLoading = true);
       try {
         await _authService.deleteAccount();
-        // AuthGate سيتولى التوجيه تلقائياً
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+            (route) => false,
+          );
+        }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -92,7 +119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _user ?? FirebaseAuth.instance.currentUser;
 
     // تاريخ إنشاء الحساب
     final creationDate = user?.metadata.creationTime;
@@ -119,7 +146,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             child: Column(
               children: [
-                // بطاقة المستخدم الرئيسية
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
@@ -169,8 +195,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // بطاقات الإحصائيات - جميع القيم صفرية
                 Row(
                   children: [
                     _buildStatItem(
@@ -211,8 +235,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-
-                // معلومات الحساب
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -253,8 +275,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // أزرار تسجيل الخروج وحذف الحساب
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
@@ -304,7 +324,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-          // مؤشر تحميل
           if (_isLoading)
             Container(
               color: Colors.black12,

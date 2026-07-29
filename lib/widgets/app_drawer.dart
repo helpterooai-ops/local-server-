@@ -5,14 +5,35 @@ import '../screens/profile_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/server_dashboard_screen.dart';
 
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
+
+  @override
+  State<AppDrawer> createState() => _AppDrawerState();
+}
+
+class _AppDrawerState extends State<AppDrawer> {
+  User? _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    // إعادة تحميل بيانات المستخدم لضمان تحديث displayName
+    await FirebaseAuth.instance.currentUser?.reload();
+    setState(() {
+      _user = FirebaseAuth.instance.currentUser;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _user ?? FirebaseAuth.instance.currentUser;
 
     return Drawer(
       backgroundColor: Colors.transparent,
@@ -21,7 +42,6 @@ class AppDrawer extends StatelessWidget {
           margin: const EdgeInsets.only(top: 12, bottom: 12, right: 12),
           decoration: BoxDecoration(
             color: Colors.white,
-            // ✅ تم التصحيح: الانحناءات في الجهة الخارجية (اليمنى)
             borderRadius: const BorderRadius.only(
               topRight: Radius.circular(24),
               bottomRight: Radius.circular(24),
@@ -41,7 +61,6 @@ class AppDrawer extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                 decoration: const BoxDecoration(
-                  // ✅ تم التصحيح
                   borderRadius: BorderRadius.only(
                     topRight: Radius.circular(24),
                   ),
@@ -166,17 +185,6 @@ class AppDrawer extends StatelessWidget {
                 icon: Icons.palette_outlined,
                 title: 'تخصيص المظهر',
                 onTap: () => Navigator.pop(context),
-              ),
-              _buildDrawerItem(
-                context,
-                icon: Icons.logout_rounded,
-                title: 'تسجيل الخروج',
-                textColor: const Color(0xFFE53E3E),
-                iconColor: const Color(0xFFE53E3E),
-                onTap: () async {
-                  await FirebaseAuth.instance.signOut();
-                  if (context.mounted) Navigator.pop(context);
-                },
               ),
               const SizedBox(height: 20),
             ],
