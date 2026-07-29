@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   String? _errorMessage;
+  String? _emailError;
 
   @override
   void dispose() {
@@ -26,17 +27,30 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  bool _isEmailValid(String email) {
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    return emailRegex.hasMatch(email.trim());
+  }
+
   Future<void> _handleLogin() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _emailError = null;
     });
 
+    final email = _emailController.text.trim();
+
+    if (!_isEmailValid(email)) {
+      setState(() {
+        _emailError = 'صيغة البريد الإلكتروني غير صحيحة.';
+        _isLoading = false;
+      });
+      return;
+    }
+
     try {
-      await _authService.signIn(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
+      await _authService.signIn(email, _passwordController.text.trim());
     } on FirebaseAuthException catch (e) {
       String message;
       switch (e.code) {
@@ -69,7 +83,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // فتح صفحة التسجيل وانتظار البريد المرجوع
   Future<void> _goToRegister() async {
     final email = await Navigator.push(
       context,
@@ -179,10 +192,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: colorScheme.primary,
+                      color: _emailError != null ? const Color(0xFFE53E3E) : colorScheme.primary,
                       width: 2,
                     ),
                   ),
+                  errorText: _emailError,
+                  errorStyle: GoogleFonts.ibmPlexSansArabic(fontSize: 12),
                 ),
               ),
               const SizedBox(height: 16),

@@ -11,6 +11,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -18,6 +19,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
+  String? _nameError;
   String? _emailError;
   String? _passwordError;
   String? _confirmPasswordError;
@@ -25,6 +27,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -70,17 +73,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _handleRegister() async {
     // إعادة تعيين الأخطاء
     setState(() {
+      _nameError = null;
       _emailError = null;
       _passwordError = null;
       _confirmPasswordError = null;
       _successMessage = null;
     });
 
+    final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
     final confirm = _confirmPasswordController.text;
 
     bool valid = true;
+
+    if (name.isEmpty) {
+      setState(() => _nameError = 'الرجاء إدخال اسمك.');
+      valid = false;
+    }
 
     if (!_isEmailValid(email)) {
       setState(() => _emailError = 'صيغة البريد الإلكتروني غير صحيحة.');
@@ -103,12 +113,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await _authService.signUp(email, password);
+      User? user = await _authService.signUp(email, password);
+      if (user != null) {
+        await user.updateDisplayName(name);
+      }
       setState(() {
         _isLoading = false;
         _successMessage = 'تم إنشاء الحساب بنجاح! سيتم توجيهك لتسجيل الدخول.';
       });
-      // الانتظار قليلاً لإظهار رسالة النجاح ثم العودة بالبريد
+      // انتظار لإظهار رسالة النجاح ثم العودة بالبريد
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
         Navigator.pop(context, email);
@@ -198,6 +211,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   backgroundColor: const Color(0xFF38A169).withValues(alpha: 0.1),
                   textColor: const Color(0xFF38A169),
                 ),
+
+              // حقل الاسم - جديد
+              TextField(
+                controller: _nameController,
+                textDirection: TextDirection.rtl,
+                decoration: InputDecoration(
+                  labelText: 'الاسم الكامل',
+                  labelStyle: GoogleFonts.ibmPlexSansArabic(),
+                  hintText: 'أدخل اسمك الكامل',
+                  hintStyle: GoogleFonts.ibmPlexSansArabic(
+                    color: colorScheme.onSurface.withValues(alpha: 0.3),
+                  ),
+                  prefixIcon: const Icon(Icons.person_outline),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: _nameError != null ? const Color(0xFFE53E3E) : colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                  errorText: _nameError,
+                  errorStyle: GoogleFonts.ibmPlexSansArabic(fontSize: 12),
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // حقل البريد الإلكتروني
               TextField(

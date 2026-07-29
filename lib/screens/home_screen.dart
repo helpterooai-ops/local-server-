@@ -24,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final user = FirebaseAuth.instance.currentUser;
+    final userName = user?.displayName ?? 'المستخدم';
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -54,8 +55,9 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ✅ ترحيب بالاسم الحقيقي
             Text(
-              'مرحباً، ${user?.email?.split('@').first ?? 'المستخدم'} 👋',
+              'مرحباً، $userName 👋',
               style: GoogleFonts.ibmPlexSansArabic(
                 textStyle: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w600,
