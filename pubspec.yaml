@@ -23,10 +23,10 @@ dependencies:
   flutter_highlight: ^0.7.0
   highlight: ^0.7.0
 
-  # الخادم المحلي (Core HTTP Server)
-  # shelf: ^1.4.1
-  # shelf_router: ^1.1.4
-  # shelf_static: ^1.1.2
+  # الخادم المحلي (Core HTTP Server) - تم التفعيل
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4
+  shelf_static: ^1.1.2
 
   # بوتات تيليجرام
   # teledart: ^0.6.1

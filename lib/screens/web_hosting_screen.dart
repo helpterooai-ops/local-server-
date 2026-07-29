@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
-import 'package:highlight/languages/xml.dart'; // تم التغيير إلى xml
+import 'package:highlight/languages/xml.dart';
 import 'package:highlight/languages/css.dart';
 import 'package:highlight/languages/javascript.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
+import '../services/local_server_service.dart';
 
 class WebHostingScreen extends StatefulWidget {
   const WebHostingScreen({super.key});
@@ -18,6 +19,10 @@ class _WebHostingScreenState extends State<WebHostingScreen> with SingleTickerPr
   late CodeController _htmlController;
   late CodeController _cssController;
   late CodeController _jsController;
+  final LocalServerService _serverService = LocalServerService();
+  bool _isServerRunning = false;
+  String? _serverUrl;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -45,18 +50,9 @@ h1 {
 
     const jsCode = '''console.log('مرحباً من JavaScript!');''';
 
-    _htmlController = CodeController(
-      text: htmlCode,
-      language: xml, // تم التغيير إلى xml
-    );
-    _cssController = CodeController(
-      text: cssCode,
-      language: css,
-    );
-    _jsController = CodeController(
-      text: jsCode,
-      language: javascript,
-    );
+    _htmlController = CodeController(text: htmlCode, language: xml);
+    _cssController = CodeController(text: cssCode, language: css);
+    _jsController = CodeController(text: jsCode, language: javascript);
   }
 
   @override
@@ -65,19 +61,69 @@ h1 {
     _htmlController.dispose();
     _cssController.dispose();
     _jsController.dispose();
+    _serverService.stop();
     super.dispose();
   }
 
-  void _hostWebsite() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'سيتم استضافة الموقع قريباً!',
-          style: GoogleFonts.ibmPlexSansArabic(),
-        ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
-    );
+  String _buildFullHtml() {
+    final html = _htmlController.text;
+    final css = _cssController.text;
+    final js = _jsController.text;
+
+    // دمج CSS و JavaScript في HTML
+    String fullHtml = html;
+    if (css.isNotEmpty) {
+      final cssTag = '\n<style>\n$css\n</style>';
+      if (fullHtml.contains('</head>')) {
+        fullHtml = fullHtml.replaceFirst('</head>', '$cssTag\n</head>');
+      } else if (fullHtml.contains('<body>')) {
+        fullHtml = fullHtml.replaceFirst('<body>', '$cssTag\n<body>');
+      } else {
+        fullHtml += cssTag;
+      }
+    }
+    if (js.isNotEmpty) {
+      final jsTag = '\n<script>\n$js\n</script>';
+      if (fullHtml.contains('</body>')) {
+        fullHtml = fullHtml.replaceFirst('</body>', '$jsTag\n</body>');
+      } else {
+        fullHtml += jsTag;
+      }
+    }
+    return fullHtml;
+  }
+
+  Future<void> _hostWebsite() async {
+    setState(() => _isLoading = true);
+    try {
+      if (_isServerRunning) {
+        await _serverService.stop();
+        setState(() {
+          _isServerRunning = false;
+          _serverUrl = null;
+        });
+      } else {
+        final fullHtml = _buildFullHtml();
+        _serverService.updateWebsite(fullHtml);
+        final url = await _serverService.start();
+        setState(() {
+          _isServerRunning = true;
+          _serverUrl = url;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل تشغيل الخادم: $e',
+                style: GoogleFonts.ibmPlexSansArabic()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -112,20 +158,52 @@ h1 {
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Column(
         children: [
-          _buildCodeEditor(_htmlController),
-          _buildCodeEditor(_cssController),
-          _buildCodeEditor(_jsController),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildCodeEditor(_htmlController),
+                _buildCodeEditor(_cssController),
+                _buildCodeEditor(_jsController),
+              ],
+            ),
+          ),
+          // شريط حالة الخادم
+          if (_isServerRunning && _serverUrl != null)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              color: const Color(0xFF38A169),
+              child: Row(
+                children: [
+                  const Icon(Icons.link, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '$_serverUrl',
+                      style: const TextStyle(color: Colors.white, fontFamily: 'monospace'),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.stop_circle, color: Colors.white),
+                    onPressed: _hostWebsite,
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _hostWebsite,
-        backgroundColor: const Color(0xFF38A169),
-        icon: const Icon(Icons.cloud_upload_outlined, color: Colors.white),
+        onPressed: _isLoading ? null : _hostWebsite,
+        backgroundColor: _isServerRunning ? const Color(0xFFE53E3E) : const Color(0xFF38A169),
+        icon: Icon(
+          _isServerRunning ? Icons.stop : Icons.cloud_upload_outlined,
+          color: Colors.white,
+        ),
         label: Text(
-          'استضافة',
+          _isServerRunning ? 'إيقاف' : 'استضافة',
           style: GoogleFonts.ibmPlexSansArabic(
             color: Colors.white,
             fontWeight: FontWeight.w700,
