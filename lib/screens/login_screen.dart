@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import 'register_screen.dart';
+import 'forgot_password_screen.dart';
+import 'change_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,8 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   bool _isEmailValid(String email) {
-    final emailRegex =
-        RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
     return emailRegex.hasMatch(email.trim());
   }
 
@@ -44,6 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
     if (!_isEmailValid(email)) {
       setState(() {
@@ -54,20 +56,20 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     try {
-      await _authService.signIn(email, _passwordController.text.trim());
+      await _authService.signIn(email, password);
+      // نجاح تسجيل الدخول - AuthGate سيتولى التوجيه
     } on FirebaseAuthException catch (e) {
       String message;
-      // التحقق إذا كان الحساب موجوداً لكنه غير مؤكد
-      if (e.code == 'invalid-credential' || e.code == 'wrong-password') {
-        // نحاول إرسال تحقق جديد إذا كان البريد موجوداً
+      if (e.code == 'user-not-found') {
+        message = 'لا يوجد حساب بهذا البريد الإلكتروني.';
+      } else if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        // نحاول معرفة إذا كان الحساب موجوداً لكنه غير مؤكد
         try {
-          final methods =
-              await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+          final methods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
           if (methods.isNotEmpty) {
             setState(() {
               _needsVerification = true;
-              _errorMessage =
-                  'حسابك غير مؤكد. الرجاء تفقد بريدك الإلكتروني للتحقق.';
+              _errorMessage = 'حسابك غير مؤكد. الرجاء تفقد بريدك الإلكتروني للتحقق.';
             });
           } else {
             message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
@@ -79,17 +81,14 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } else {
         switch (e.code) {
-          case 'user-not-found':
-            message = 'لا يوجد حساب بهذا البريد الإلكتروني.';
-            break;
-          case 'wrong-password':
-            message = 'كلمة المرور غير صحيحة.';
-            break;
           case 'invalid-email':
             message = 'صيغة البريد الإلكتروني غير صحيحة.';
             break;
+          case 'too-many-requests':
+            message = 'محاولات كثيرة. الرجاء المحاولة لاحقاً.';
+            break;
           default:
-            message = 'حدث خطأ. حاول مرة أخرى.';
+            message = 'حدث خطأ غير متوقع. حاول مرة أخرى.';
         }
         setState(() => _errorMessage = message);
       }
@@ -122,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'تعذر إرسال رابط التحقق.',
+              'تعذر إرسال رابط التحقق. حاول لاحقاً.',
               style: GoogleFonts.ibmPlexSansArabic(),
             ),
             backgroundColor: const Color(0xFFE53E3E),
@@ -272,9 +271,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: _emailError != null
-                          ? const Color(0xFFE53E3E)
-                          : colorScheme.primary,
+                      color: _emailError != null ? const Color(0xFFE53E3E) : colorScheme.primary,
                       width: 2,
                     ),
                   ),
@@ -326,20 +323,45 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: () {
-                    // TODO: صفحة استعادة كلمة المرور
-                  },
-                  child: Text(
-                    'نسيت كلمة المرور؟',
-                    style: GoogleFonts.ibmPlexSansArabic(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+              // أزرار نسيت كلمة المرور وتغييرها
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordScreen()),
+                      );
+                    },
+                    child: Text(
+                      'نسيت كلمة المرور؟',
+                      style: GoogleFonts.ibmPlexSansArabic(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
-                ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ChangePasswordScreen()),
+                      );
+                    },
+                    child: Text(
+                      'تغيير كلمة المرور',
+                      style: GoogleFonts.ibmPlexSansArabic(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
               SizedBox(

@@ -26,7 +26,6 @@ class AuthService {
     } on FirebaseAuthException {
       rethrow;
     } catch (e) {
-      // إذا فشل إرسال التحقق، نرمي استثناء خاص
       throw FirebaseAuthException(
         code: 'verification-email-failed',
         message: 'فشل إرسال رابط التحقق. تحقق من اتصالك وحاول مجدداً.',
@@ -45,14 +44,34 @@ class AuthService {
     }
   }
 
+  // تغيير كلمة المرور (لمن يعرف كلمة المرور الحالية)
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    if (user != null && user.email != null) {
+      // إعادة المصادقة
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+      // تحديث كلمة المرور
+      await user.updatePassword(newPassword);
+    }
+  }
+
+  // استعادة كلمة المرور (لناسي كلمة المرور)
+  Future<void> resetPassword(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
+  }
+
+  // إعادة إرسال رابط التحقق
   Future<void> resendVerificationEmail() async {
     final user = _auth.currentUser;
     if (user != null && !user.emailVerified) {
       await user.sendEmailVerification();
     }
-  }
-
-  Future<void> resetPassword(String email) async {
-    await _auth.sendPasswordResetEmail(email: email);
   }
 }

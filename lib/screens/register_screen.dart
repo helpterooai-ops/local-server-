@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
+import 'home_screen.dart'; // استيراد HomeScreen
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -114,13 +115,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (user != null) {
         await user.updateDisplayName(name);
       }
-      setState(() {
-        _isLoading = false;
-        _successMessage = 'تم إنشاء الحساب بنجاح! سيتم توجيهك لتسجيل الدخول.';
-      });
-      await Future.delayed(const Duration(seconds: 2));
+      // ✅ بعد النجاح، انتقل مباشرة إلى الشاشة الرئيسية
+      // AuthGate سيتولى فحص التحقق ويعرض VerificationScreen
       if (mounted) {
-        Navigator.pop(context, email);
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (route) => false,
+        );
       }
     } on FirebaseAuthException catch (e) {
       String message;
