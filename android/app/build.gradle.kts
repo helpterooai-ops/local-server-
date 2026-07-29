@@ -23,7 +23,7 @@ android {
     }
 
     buildTypes {
-        release {
+        getByName("release") {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -33,9 +33,9 @@ flutter {
     source = "../.."
 }
 
-// التعطيل الصحيح والشامل لجميع مهام CMake و NDK لتفادي مشكلة الملفات المفقودة
-tasks.configureEach { task ->
-    if (task.name.contains("CMake") || task.name.contains("cxx") || task.name.contains("Cxx")) {
-        task.enabled = false
+// التعطيل الصحيح والمتوافق مع لغة Kotlin DSL
+tasks.configureEach {
+    if (name.contains("CMake") || name.contains("cxx") || name.contains("Cxx")) {
+        enabled = false
     }
 }
