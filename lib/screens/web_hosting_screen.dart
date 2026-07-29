@@ -117,6 +117,54 @@ h1 {
     );
   }
 
+  void _showInstructionsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'تعليمات الاستضافة',
+          style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w700),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildInstructionItem(
+                  '• سيتم دمج أكواد HTML و CSS و JavaScript في صفحة واحدة.'),
+              const SizedBox(height: 12),
+              _buildInstructionItem(
+                  '• في حال لم تضف CSS أو JavaScript، سيتم استضافة هيكل HTML فقط.'),
+              const SizedBox(height: 12),
+              _buildInstructionItem(
+                  '• الرابط يعمل فقط للأجهزة المتصلة بنفس شبكة الواي فاي.'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'فهمت',
+              style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInstructionItem(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.ibmPlexSansArabic(
+        fontSize: 14,
+        color: Colors.grey[800],
+      ),
+    );
+  }
+
   Future<void> _hostWebsite() async {
     setState(() => _isLoading = true);
     try {
@@ -127,37 +175,6 @@ h1 {
           _serverUrl = null;
         });
       } else {
-        final cssText = _cssController.text.trim();
-        final jsText = _jsController.text.trim();
-        bool cssMissing = cssText.isEmpty;
-        bool jsMissing = jsText.isEmpty;
-
-        if (cssMissing || jsMissing) {
-          String message = '';
-          if (cssMissing && jsMissing) {
-            message = 'لم تُضف أكواد CSS و JavaScript. سيتم استضافة هيكل HTML فقط.';
-          } else if (cssMissing) {
-            message = 'لم تُضف أكواد CSS. سيتم استضافة HTML و JavaScript فقط.';
-          } else if (jsMissing) {
-            message = 'لم تُضف أكواد JavaScript. سيتم استضافة HTML و CSS فقط.';
-          }
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(message,
-                    style: GoogleFonts.ibmPlexSansArabic(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600)),
-                backgroundColor: Colors.orange,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                duration: const Duration(seconds: 3),
-              ),
-            );
-          }
-        }
-
         final fullHtml = _buildFullHtml();
         _serverService.updateWebsite(fullHtml);
         final url = await _serverService.start();
@@ -165,36 +182,20 @@ h1 {
           _isServerRunning = true;
           _serverUrl = url;
         });
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'الرابط يعمل فقط على الأجهزة المتصلة بنفس شبكة الواي فاي',
-                style: GoogleFonts.ibmPlexSansArabic(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12),
-              ),
-              backgroundColor: const Color(0xFF1E3A8A),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              duration: const Duration(seconds: 4),
-            ),
-          );
-        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('فشل تشغيل الخادم: $e',
-                style: GoogleFonts.ibmPlexSansArabic(color: Colors.white)),
+            content: Text(
+              'فشل تشغيل الخادم',
+              style: GoogleFonts.ibmPlexSansArabic(color: Colors.white),
+            ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16)),
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
         );
       }
@@ -249,7 +250,6 @@ h1 {
       ),
       body: Column(
         children: [
-          // شريط الرابط العلوي
           if (_isServerRunning && _serverUrl != null)
             Container(
               width: double.infinity,
@@ -293,6 +293,12 @@ h1 {
                     ),
                   ),
                   IconButton(
+                    icon: const Icon(Icons.info_outline_rounded, size: 18),
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    onPressed: _showInstructionsDialog,
+                    tooltip: 'تعليمات الاستضافة',
+                  ),
+                  IconButton(
                     icon: const Icon(Icons.copy, size: 18),
                     color: colorScheme.onSurface.withValues(alpha: 0.6),
                     onPressed: () {
@@ -303,8 +309,6 @@ h1 {
                 ],
               ),
             ),
-
-          // المحرر بلون VS Code الداكن
           Expanded(
             child: Container(
               color: const Color(0xFF1E1E1E),

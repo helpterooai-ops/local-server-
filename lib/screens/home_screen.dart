@@ -15,10 +15,36 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final bool _isServerRunning = false;
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final double _storageUsed = 0.0;
   final int _activeTunnels = 0;
+  bool _isServerActive = LocalServerService().isRunning;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refreshServerStatus();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshServerStatus();
+    }
+  }
+
+  void _refreshServerStatus() {
+    setState(() {
+      _isServerActive = LocalServerService().isRunning;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +52,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final textTheme = Theme.of(context).textTheme;
     final user = FirebaseAuth.instance.currentUser;
     final userName = user?.displayName ?? 'المستخدم';
-    final serverService = LocalServerService();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -81,9 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildStatCard(
                   context,
                   title: 'حالة الخادم',
-                  value: serverService.isRunning ? 'يعمل' : 'متوقف',
+                  value: _isServerActive ? 'يعمل' : 'متوقف',
                   icon: Icons.dns_outlined,
-                  valueColor: serverService.isRunning
+                  valueColor: _isServerActive
                       ? const Color(0xFF38A169)
                       : const Color(0xFFE53E3E),
                 ),
@@ -114,23 +139,15 @@ class _HomeScreenState extends State<HomeScreen> {
               context,
               icon: Icons.code_rounded,
               title: 'محرر الأكواد',
-              subtitle: 'استضافة مواقع ويب تفاعلية',
-              color: const Color(0xFF3182CE),
-              trailing: serverService.isRunning
-                  ? Container(
-                      width: 10,
-                      height: 10,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF38A169),
-                        shape: BoxShape.circle,
-                      ),
-                    )
-                  : null,
-              onTap: () {
-                Navigator.push(
+              subtitle: _isServerActive ? 'الخادم نشط الآن' : 'استضافة مواقع ويب تفاعلية',
+              color: _isServerActive ? const Color(0xFF38A169) : const Color(0xFF3182CE),
+              isActive: _isServerActive,
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const WebHostingScreen()),
                 );
+                _refreshServerStatus();
               },
             ),
             const SizedBox(height: 12),
@@ -309,71 +326,103 @@ class _HomeScreenState extends State<HomeScreen> {
     required String title,
     required String subtitle,
     required Color color,
-    Widget? trailing,
+    bool isActive = false,
     required VoidCallback onTap,
   }) {
-    return Card(
-      elevation: 2,
-      shadowColor: color.withValues(alpha: 0.08),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: onTap,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 2),
+      decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 26),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.ibmPlexSansArabic(
-                        textStyle:
-                            Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.ibmPlexSansArabic(
-                        textStyle:
-                            Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withValues(alpha: 0.5),
-                                ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (trailing != null) ...[
-                const SizedBox(width: 8),
-                trailing,
-                const SizedBox(width: 4),
+        border: isActive
+            ? Border.all(
+                color: const Color(0xFF38A169).withValues(alpha: 0.6),
+                width: 2,
+              )
+            : null,
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: const Color(0xFF38A169).withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                )
+              ]
+            : [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.08),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                )
               ],
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
-              ),
-            ],
+      ),
+      child: Card(
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 26),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.ibmPlexSansArabic(
+                          textStyle:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.ibmPlexSansArabic(
+                          textStyle:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.5),
+                                  ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isActive)
+                  Container(
+                    width: 12,
+                    height: 12,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF38A169),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                ),
+              ],
+            ),
           ),
         ),
       ),
