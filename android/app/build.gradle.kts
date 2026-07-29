@@ -12,6 +12,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // السطر الجديد لتفعيل الـ Desugaring لمكتبة الإشعارات
+        isCoreLibraryDesugaringEnabled = true 
     }
 
     defaultConfig {
@@ -33,9 +35,13 @@ flutter {
     source = "../.."
 }
 
-// التعطيل الصحيح والمتوافق مع لغة Kotlin DSL
 tasks.configureEach {
     if (name.contains("CMake") || name.contains("cxx") || name.contains("Cxx")) {
         enabled = false
     }
+}
+
+// البلوك الجديد لإضافة أداة الـ Desugaring المطلوبة
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
