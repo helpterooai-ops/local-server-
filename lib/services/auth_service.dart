@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // تسجيل الدخول
   Future<User?> signIn(String email, String password) async {
     try {
       UserCredential result = await _auth.signInWithEmailAndPassword(
@@ -16,27 +15,29 @@ class AuthService {
     }
   }
 
-  // إنشاء حساب جديد
   Future<User?> signUp(String email, String password) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      // إرسال رابط التحقق
       await result.user?.sendEmailVerification();
       return result.user;
-    } catch (e) {
+    } on FirebaseAuthException {
       rethrow;
+    } catch (e) {
+      // إذا فشل إرسال التحقق، نرمي استثناء خاص
+      throw FirebaseAuthException(
+        code: 'verification-email-failed',
+        message: 'فشل إرسال رابط التحقق. تحقق من اتصالك وحاول مجدداً.',
+      );
     }
   }
 
-  // تسجيل الخروج
   Future<void> signOut() async {
     await _auth.signOut();
   }
 
-  // حذف الحساب نهائياً
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;
     if (user != null) {
@@ -44,7 +45,6 @@ class AuthService {
     }
   }
 
-  // إعادة إرسال رابط التحقق
   Future<void> resendVerificationEmail() async {
     final user = _auth.currentUser;
     if (user != null && !user.emailVerified) {
@@ -52,7 +52,6 @@ class AuthService {
     }
   }
 
-  // استعادة كلمة المرور
   Future<void> resetPassword(String email) async {
     await _auth.sendPasswordResetEmail(email: email);
   }

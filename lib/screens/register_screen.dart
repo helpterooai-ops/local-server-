@@ -49,13 +49,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!hasUpper || !hasLower || !hasDigit) {
       return 'يجب أن تحتوي كلمة المرور على حروف كبيرة وصغيرة وأرقام.';
     }
-    // منع تكرار نفس الحرف أكثر من مرتين متتاليتين
     for (int i = 0; i < password.length - 2; i++) {
       if (password[i] == password[i+1] && password[i+1] == password[i+2]) {
         return 'لا يُسمح بتكرار نفس الحرف أو الرقم 3 مرات متتالية.';
       }
     }
-    // منع التسلسل التصاعدي أو التنازلي لأكثر من 3 أرقام متتالية
     for (int i = 0; i < password.length - 2; i++) {
       final current = password.codeUnitAt(i);
       final next = password.codeUnitAt(i+1);
@@ -71,7 +69,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
-    // إعادة تعيين الأخطاء
     setState(() {
       _nameError = null;
       _emailError = null;
@@ -121,7 +118,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _isLoading = false;
         _successMessage = 'تم إنشاء الحساب بنجاح! سيتم توجيهك لتسجيل الدخول.';
       });
-      // انتظار لإظهار رسالة النجاح ثم العودة بالبريد
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
         Navigator.pop(context, email);
@@ -137,6 +133,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           break;
         case 'weak-password':
           message = 'كلمة المرور ضعيفة جداً.';
+          break;
+        case 'verification-email-failed':
+          message = e.message ?? 'فشل إرسال رابط التحقق.';
           break;
         default:
           message = 'حدث خطأ. حاول مرة أخرى.';
@@ -203,7 +202,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 32),
 
-              // رسالة نجاح
               if (_successMessage != null)
                 _buildMessageBox(
                   message: _successMessage!,
@@ -212,7 +210,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   textColor: const Color(0xFF38A169),
                 ),
 
-              // حقل الاسم - جديد
+              // حقل الاسم
               TextField(
                 controller: _nameController,
                 textDirection: TextDirection.rtl,
@@ -246,7 +244,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // حقل البريد الإلكتروني
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -281,7 +278,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // حقل كلمة المرور
               TextField(
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
@@ -337,7 +333,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               const SizedBox(height: 16),
 
-              // حقل تأكيد كلمة المرور
               TextField(
                 controller: _confirmPasswordController,
                 obscureText: !_isConfirmPasswordVisible,
@@ -384,8 +379,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
 
               const SizedBox(height: 32),
-
-              // زر إنشاء الحساب
               SizedBox(
                 width: double.infinity,
                 height: 52,
