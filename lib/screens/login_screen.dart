@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 import 'change_password_screen.dart';
+import 'verification_screen.dart'; // تم الاستيراد الجديد
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -63,14 +64,17 @@ class _LoginScreenState extends State<LoginScreen> {
       if (e.code == 'user-not-found') {
         message = 'لا يوجد حساب بهذا البريد الإلكتروني.';
       } else if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
-        // نحاول معرفة إذا كان الحساب موجوداً لكنه غير مؤكد
+        // إذا كان الحساب موجوداً لكنه غير مؤكد، ننتقل مباشرةً إلى شاشة التحقق
         try {
           final methods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
           if (methods.isNotEmpty) {
-            setState(() {
-              _needsVerification = true;
-              _errorMessage = 'حسابك غير مؤكد. الرجاء تفقد بريدك الإلكتروني للتحقق.';
-            });
+            if (mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const VerificationScreen()),
+              );
+            }
+            return;
           } else {
             message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
             setState(() => _errorMessage = message);
@@ -198,52 +202,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: _needsVerification
-                        ? const Color(0xFF3182CE).withValues(alpha: 0.1)
-                        : const Color(0xFFE53E3E).withValues(alpha: 0.1),
+                    color: const Color(0xFFE53E3E).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Column(
+                  child: Row(
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            _needsVerification
-                                ? Icons.mark_email_unread_outlined
-                                : Icons.error_outline,
-                            color: _needsVerification
-                                ? const Color(0xFF3182CE)
-                                : const Color(0xFFE53E3E),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _errorMessage!,
-                              style: GoogleFonts.ibmPlexSansArabic(
-                                color: _needsVerification
-                                    ? const Color(0xFF3182CE)
-                                    : const Color(0xFFE53E3E),
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_needsVerification) ...[
-                        const SizedBox(height: 8),
-                        TextButton.icon(
-                          onPressed: _isResending ? null : _resendVerificationEmail,
-                          icon: const Icon(Icons.refresh, size: 18),
-                          label: Text(
-                            'إعادة إرسال رابط التحقق',
-                            style: GoogleFonts.ibmPlexSansArabic(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
+                      const Icon(Icons.error_outline,
+                          color: Color(0xFFE53E3E), size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: GoogleFonts.ibmPlexSansArabic(
+                            color: const Color(0xFFE53E3E),
+                            fontSize: 13,
                           ),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),

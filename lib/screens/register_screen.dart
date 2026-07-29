@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
-import 'home_screen.dart'; // استيراد HomeScreen
+import 'verification_screen.dart'; // تم الاستيراد الجديد
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -115,12 +115,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (user != null) {
         await user.updateDisplayName(name);
       }
-      // ✅ بعد النجاح، انتقل مباشرة إلى الشاشة الرئيسية
-      // AuthGate سيتولى فحص التحقق ويعرض VerificationScreen
+      // ✅ تم التصحيح: الانتقال إلى VerificationScreen بدلاً من HomeScreen
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => const VerificationScreen()),
           (route) => false,
         );
       }
