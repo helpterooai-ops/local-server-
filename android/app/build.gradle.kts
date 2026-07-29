@@ -33,9 +33,9 @@ flutter {
     source = "../.."
 }
 
-// تعطيل مهام CMake لأنها غير ضرورية وتسبب فشل البناء
-tasks.configureEach {
-    if (name.startsWith("configureCMake")) {
-        enabled = false
+// التعطيل الصحيح والشامل لجميع مهام CMake و NDK لتفادي مشكلة الملفات المفقودة
+tasks.configureEach { task ->
+    if (task.name.contains("CMake") || task.name.contains("cxx") || task.name.contains("Cxx")) {
+        task.enabled = false
     }
 }
