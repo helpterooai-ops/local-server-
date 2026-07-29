@@ -34,8 +34,8 @@ flutter {
 }
 
 // تعطيل مهام CMake لأنها غير ضرورية وتسبب فشل البناء
-tasks.whenTaskAdded { task ->
-    if (task.name.startsWith("configureCMake")) {
-        task.enabled = false
+tasks.configureEach {
+    if (name.startsWith("configureCMake")) {
+        enabled = false
     }
 }
