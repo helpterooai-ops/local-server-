@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
-import 'package:highlight/languages/html.dart';
+import 'package:highlight/languages/xml.dart'; // تم التغيير إلى xml
 import 'package:highlight/languages/css.dart';
 import 'package:highlight/languages/javascript.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
@@ -47,7 +47,7 @@ h1 {
 
     _htmlController = CodeController(
       text: htmlCode,
-      language: html,
+      language: xml, // تم التغيير إلى xml
     );
     _cssController = CodeController(
       text: cssCode,
@@ -69,7 +69,6 @@ h1 {
   }
 
   void _hostWebsite() {
-    // سنقوم هنا لاحقاً بتجميع الأكواد وإرسالها للخادم المحلي
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -86,7 +85,7 @@ h1 {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1E), // خلفية داكنة تشبه VS Code
+      backgroundColor: const Color(0xFF1E1E1E),
       appBar: AppBar(
         title: Text(
           'محرر الأكواد',
