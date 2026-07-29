@@ -12,7 +12,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-        // السطر الجديد لتفعيل الـ Desugaring لمكتبة الإشعارات
+        // تفعيل الـ Desugaring لمكتبة الإشعارات
         isCoreLibraryDesugaringEnabled = true 
     }
 
@@ -41,7 +41,7 @@ tasks.configureEach {
     }
 }
 
-// البلوك الجديد لإضافة أداة الـ Desugaring المطلوبة
+// البلوك الخاص بأداة الـ Desugaring
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
