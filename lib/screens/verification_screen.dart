@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
+import 'home_screen.dart';
 
 class VerificationScreen extends StatefulWidget {
   const VerificationScreen({super.key});
@@ -42,8 +43,16 @@ class _VerificationScreenState extends State<VerificationScreen> {
     });
     try {
       await FirebaseAuth.instance.currentUser?.reload();
-      if (FirebaseAuth.instance.currentUser?.emailVerified == true) {
-        // تم التحقق بنجاح، AuthGate سيتولى التوجيه تلقائياً
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.emailVerified) {
+        // ✅ تم التحقق - توجيه فوري إلى الصفحة الرئيسية
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+            (route) => false,
+          );
+        }
         return;
       }
       setState(() {
@@ -77,7 +86,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 80),
-              // أيقونة البريد
               Container(
                 width: 100,
                 height: 100,
@@ -160,7 +168,6 @@ class _VerificationScreenState extends State<VerificationScreen> {
                   ),
                 ),
               const SizedBox(height: 40),
-              // أزرار التحكم
               SizedBox(
                 width: double.infinity,
                 height: 52,

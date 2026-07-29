@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart';
-import 'package:highlight/languages/html.dart';
+import 'package:highlight/languages/xml.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
 
 class WebHostingScreen extends StatefulWidget {
@@ -17,7 +17,6 @@ class _WebHostingScreenState extends State<WebHostingScreen> {
   @override
   void initState() {
     super.initState();
-    // كود HTML افتراضي
     const initialCode = '''<!DOCTYPE html>
 <html>
 <head>
@@ -31,7 +30,7 @@ class _WebHostingScreenState extends State<WebHostingScreen> {
 
     _codeController = CodeController(
       text: initialCode,
-      language: html,
+      language: xml, // ✅ تم التغيير إلى XML
     );
   }
 
@@ -60,7 +59,7 @@ class _WebHostingScreenState extends State<WebHostingScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1E), // خلفية داكنة تشبه VS Code
+      backgroundColor: const Color(0xFF1E1E1E),
       appBar: AppBar(
         title: Text(
           'محرر الأكواد',
@@ -77,7 +76,6 @@ class _WebHostingScreenState extends State<WebHostingScreen> {
       ),
       body: Column(
         children: [
-          // شريط تبويب اللغة
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -96,7 +94,6 @@ class _WebHostingScreenState extends State<WebHostingScreen> {
               ],
             ),
           ),
-          // المحرر
           Expanded(
             child: CodeTheme(
               data: CodeThemeData(styles: monokaiSublimeTheme),
@@ -112,7 +109,6 @@ class _WebHostingScreenState extends State<WebHostingScreen> {
               ),
             ),
           ),
-          // شريط الحالة السفلي
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -121,7 +117,7 @@ class _WebHostingScreenState extends State<WebHostingScreen> {
               children: [
                 const Spacer(),
                 Text(
-                  'HTML',
+                  'XML / HTML',
                   style: GoogleFonts.ibmPlexSansArabic(
                     color: Colors.white,
                     fontSize: 12,

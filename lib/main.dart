@@ -74,19 +74,16 @@ class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      // ✅ تم التغيير إلى userChanges لتتبع تحديثات emailVerified
+      stream: FirebaseAuth.instance.userChanges(),
       builder: (context, snapshot) {
-        // المستخدم مسجل دخوله
         if (snapshot.hasData) {
           final user = snapshot.data!;
-          // إذا كان البريد مؤكداً، اذهب للرئيسية
           if (user.emailVerified) {
             return const HomeScreen();
           }
-          // غير ذلك، اذهب لشاشة التحقق
           return const VerificationScreen();
         }
-        // لا يوجد مستخدم، اذهب لتسجيل الدخول
         return const LoginScreen();
       },
     );
