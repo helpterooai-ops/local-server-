@@ -209,7 +209,7 @@ h1 {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC), // خلفية الصفحة بلون التطبيق
+      backgroundColor: const Color(0xFFF7F9FC),
       appBar: AppBar(
         title: Text(
           'محرر الأكواد',
@@ -249,7 +249,7 @@ h1 {
       ),
       body: Column(
         children: [
-          // ✅ شريط الرابط العلوي الاحترافي (يظهر عند الاستضافة)
+          // شريط الرابط العلوي
           if (_isServerRunning && _serverUrl != null)
             Container(
               width: double.infinity,
@@ -281,11 +281,11 @@ h1 {
                           },
                           child: Text(
                             _serverUrl!,
-                            style: GoogleFonts.ibmPlexSansArabic(
+                            style: const TextStyle(
                               fontFamily: 'monospace',
                               fontWeight: FontWeight.w500,
                               fontSize: 14,
-                              color: colorScheme.onSurface,
+                              color: Colors.black87,
                             ),
                           ),
                         ),
@@ -304,7 +304,7 @@ h1 {
               ),
             ),
 
-          // ✅ المحرر بلون VS Code الداكن
+          // المحرر بلون VS Code الداكن
           Expanded(
             child: Container(
               color: const Color(0xFF1E1E1E),
