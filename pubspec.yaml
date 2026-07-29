@@ -27,6 +27,12 @@ dependencies:
   shelf: ^1.4.1
   shelf_router: ^1.1.4
   shelf_static: ^1.1.2
+  flutter_background_service: ^5.0.6
+  flutter_local_notifications: ^17.2.3
+
+  # خدمة الخلفية (لكي لا يتوقف الخادم عند إغلاق الشاشة)
+  flutter_background_service: ^5.0.6
+  flutter_local_notifications: ^17.2.3
 
   # بوتات تيليجرام
   # teledart: ^0.6.1

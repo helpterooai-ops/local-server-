@@ -6,7 +6,7 @@ import 'package:highlight/languages/xml.dart';
 import 'package:highlight/languages/css.dart';
 import 'package:highlight/languages/javascript.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
-import '../services/local_server_service.dart';
+import '../services/background_service.dart';
 
 class WebHostingScreen extends StatefulWidget {
   const WebHostingScreen({super.key});
@@ -21,7 +21,7 @@ class _WebHostingScreenState extends State<WebHostingScreen>
   late CodeController _htmlController;
   late CodeController _cssController;
   late CodeController _jsController;
-  final LocalServerService _serverService = LocalServerService();
+  final BackgroundServerService _backgroundService = BackgroundServerService();
   bool _isServerRunning = false;
   String? _serverUrl;
   bool _isLoading = false;
@@ -30,10 +30,7 @@ class _WebHostingScreenState extends State<WebHostingScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _isServerRunning = _serverService.isRunning;
-    if (_isServerRunning) {
-      _serverUrl = 'http://localhost:${_serverService.port}';
-    }
+    _checkServerStatus();
 
     const htmlCode = '''<!DOCTYPE html>
 <html>
@@ -68,6 +65,16 @@ h1 {
     _cssController.dispose();
     _jsController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkServerStatus() async {
+    final isRunning = await _backgroundService.isServiceRunning();
+    setState(() {
+      _isServerRunning = isRunning;
+      if (_isServerRunning) {
+        _serverUrl = 'http://localhost:8080';
+      }
+    });
   }
 
   String _buildFullHtml() {
@@ -139,6 +146,9 @@ h1 {
               const SizedBox(height: 12),
               _buildInstructionItem(
                   '• الرابط يعمل فقط للأجهزة المتصلة بنفس شبكة الواي فاي.'),
+              const SizedBox(height: 12),
+              _buildInstructionItem(
+                  '• الخادم يعمل في الخلفية حتى بعد إغلاق الشاشة.'),
             ],
           ),
         ),
@@ -169,18 +179,17 @@ h1 {
     setState(() => _isLoading = true);
     try {
       if (_isServerRunning) {
-        await _serverService.stop();
+        await _backgroundService.stopService();
         setState(() {
           _isServerRunning = false;
           _serverUrl = null;
         });
       } else {
         final fullHtml = _buildFullHtml();
-        _serverService.updateWebsite(fullHtml);
-        final url = await _serverService.start();
+        await _backgroundService.startService(fullHtml);
         setState(() {
           _isServerRunning = true;
-          _serverUrl = url;
+          _serverUrl = 'http://localhost:8080';
         });
       }
     } catch (e) {
