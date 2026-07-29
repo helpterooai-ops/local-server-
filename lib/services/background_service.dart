@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/widgets.dart' hide Router;
- // تم إضافة مكتبة فلاتر الأساسية
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart';
@@ -17,10 +18,15 @@ String? _backgroundHtml;
 
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
-  // الآن ستعمل بدون أخطاء بفضل الاستيراد
+  // إلزامي لتفعيل الـ Plugins داخل عزلة الخلفية (Background Isolate)
+  DartPluginRegistrant.ensureInitialized();
   WidgetsFlutterBinding.ensureInitialized();
 
   if (service is AndroidServiceInstance) {
+    // ترقية فورية لـ Foreground Service — تمنع أندرويد من قتل التطبيق
+    // بسبب تجاوز مهلة الـ 5 ثوانٍ (ForegroundServiceDidNotStartInTimeException)
+    service.setAsForegroundService();
+
     service.on('stopService').listen((event) async {
       await _backgroundServer?.close(force: true);
       service.stopSelf();
@@ -91,14 +97,17 @@ class BackgroundServerService {
   }
 
   Future<void> startService(String htmlContent) async {
+    // طلب صلاحية الإشعارات - إلزامية من أندرويد 13+
+    await Permission.notification.request();
+
     final isRunning = await _service.isRunning();
-    
+
     if (!isRunning) {
       await _service.startService();
       // إعطاء مهلة بسيطة جداً للخلفية لكي تبدأ قبل إرسال البيانات
       await Future.delayed(const Duration(milliseconds: 500));
     }
-    
+
     // إرسال البيانات بصيغة Map صحيحة
     _service.invoke('updateWebsite', {'html': htmlContent});
   }
