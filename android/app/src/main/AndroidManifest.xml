@@ -34,7 +34,7 @@
         <!-- تعريف الخدمة الأمامية مع أمر استبدال قيمة exported -->
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
-            android:foregroundServiceType="dataSync"
+            android:foregroundServiceType="specialUse"
             android:exported="true"
             tools:replace="android:exported" />
         
