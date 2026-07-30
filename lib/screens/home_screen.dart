@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      drawer: const AppDrawer(),
+      drawer: AppDrawer(), // إزالة const
       appBar: AppBar(
         title: Text(
           'لوحة التحكم',
@@ -193,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const LiveTunnelsScreen()),
+                  MaterialPageRoute(builder: (context) => LiveTunnelsScreen()), // إزالة const
                 );
               },
             ),

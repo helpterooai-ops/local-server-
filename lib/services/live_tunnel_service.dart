@@ -7,7 +7,7 @@ import 'package:shelf_router/shelf_router.dart';
 class LiveSession {
   final String id;
   final List<String> filePaths;
-  final Map<String, bool> fileVisibility; // path -> isVisible
+  final Map<String, bool> fileVisibility;
   final int durationMinutes;
   final String? staticPassword;
   final bool useOtp;
@@ -40,7 +40,6 @@ class LiveTunnelService {
   HttpServer? _server;
   LiveSession? _activeSession;
 
-  // بدء الخادم بجلسة جديدة
   Future<String> startServer(LiveSession session) async {
     _activeSession = session;
     if (_server != null) {
@@ -51,7 +50,8 @@ class LiveTunnelService {
     router.get('/file', _handleFileRequest);
 
     _server = await io.serve(router, InternetAddress.anyIPv4, 8080);
-    return 'http://${_getLocalIp()}:8080/retrieve?session=${session.id}';
+    final ip = await _getLocalIp();
+    return 'http://$ip:8080/retrieve?session=${session.id}';
   }
 
   Future<void> stopServer() async {
@@ -63,10 +63,8 @@ class LiveTunnelService {
   bool get isRunning => _server != null && _activeSession != null;
   LiveSession? get currentSession => _activeSession;
 
-  // معالجة طلب الاسترداد (الصفحة الرئيسية للزائر)
   Future<Response> _handleRetrieveRequest(Request request) async {
     if (_activeSession == null) return Response.notFound('لا توجد جلسة نشطة.');
-    // التحقق من هيدر التطبيق
     if (request.headers['x-pocket-client'] != 'pocket_cloud_host') {
       return Response.ok(
         '<html dir="rtl"><body style="font-family:sans-serif;text-align:center;padding-top:50px;">'
@@ -76,34 +74,28 @@ class LiveTunnelService {
         headers: {'Content-Type': 'text/html; charset=utf-8'},
       );
     }
-    // التحقق من كود الجلسة
     final sessionId = request.url.queryParameters['session'];
     if (sessionId != _activeSession!.id) {
       return Response.forbidden('كود الجلسة غير صحيح.');
     }
-    // التحقق من الصلاحية
     if (_activeSession!.isExpired) {
       return Response.forbidden('انتهت صلاحية الرابط.');
     }
-    // التحقق من IP إذا كان مفعلاً
     if (_activeSession!.allowedIps.isNotEmpty) {
-      final clientIp = request.headers['x-forwarded-for'] ?? request.connectionInfo?.remoteAddress.address ?? '';
+      final clientIp = request.headers['x-forwarded-for'] ?? '';
       if (!_activeSession!.allowedIps.contains(clientIp)) {
         return Response.forbidden('عنوان IP غير مسموح به.');
       }
     }
-    // التحقق من كلمة المرور الثابتة
     if (_activeSession!.staticPassword != null) {
       final password = request.url.queryParameters['pass'];
       if (password != _activeSession!.staticPassword) {
         return Response.forbidden('كلمة المرور غير صحيحة.');
       }
     }
-    // التحقق من كلمة مرور OTP
     if (_activeSession!.useOtp) {
       final otp = request.url.queryParameters['otp'];
       if (_activeSession!.otpPassword == null) {
-        // توليد OTP جديد عند أول طلب
         _activeSession!.otpPassword = _generateOtp();
       }
       if (otp != _activeSession!.otpPassword) {
@@ -114,7 +106,6 @@ class LiveTunnelService {
       }
       _activeSession!.isOtpConsumed = true;
     }
-    // عرض قائمة الملفات المتاحة (المرئية فقط)
     final visibleFiles = _activeSession!.filePaths
         .where((path) => _activeSession!.fileVisibility[path] != false)
         .toList();
@@ -124,7 +115,6 @@ class LiveTunnelService {
     );
   }
 
-  // طلب ملف محدد (للاستخدام المستقبلي)
   Future<Response> _handleFileRequest(Request request) async {
     return Response.notFound('غير مطبق بعد');
   }
@@ -134,10 +124,9 @@ class LiveTunnelService {
     return (100000 + random.nextInt(900000)).toString();
   }
 
-  String _getLocalIp() {
-    // محاولة الحصول على IP المحلي
+  Future<String> _getLocalIp() async {
     try {
-      final interfaces = NetworkInterface.list();
+      final interfaces = await NetworkInterface.list();
       for (var interface in interfaces) {
         for (var addr in interface.addresses) {
           if (addr.type == InternetAddressType.IPv4 && !addr.isLoopback) {
