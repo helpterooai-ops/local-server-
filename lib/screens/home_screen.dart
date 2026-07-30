@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      drawer: const drawer_widget.AppDrawer(), // استخدام الاسم المستعار
+      drawer: drawer_widget.AppDrawer(), // تم إزالة const هنا لإصلاح الخطأ
       appBar: AppBar(
         title: Text(
           'لوحة التحكم',
