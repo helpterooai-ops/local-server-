@@ -6,7 +6,7 @@ import 'package:highlight/languages/xml.dart';
 import 'package:highlight/languages/css.dart';
 import 'package:highlight/languages/javascript.dart';
 import 'package:flutter_highlight/themes/monokai-sublime.dart';
-import '../services/background_service.dart';
+import '../services/local_server_service.dart';
 
 class WebHostingScreen extends StatefulWidget {
   const WebHostingScreen({super.key});
@@ -21,7 +21,7 @@ class _WebHostingScreenState extends State<WebHostingScreen>
   late CodeController _htmlController;
   late CodeController _cssController;
   late CodeController _jsController;
-  final BackgroundServerService _backgroundService = BackgroundServerService();
+  final LocalServerService _localServer = LocalServerService();
   bool _isServerRunning = false;
   String? _serverUrl;
   bool _isLoading = false;
@@ -67,12 +67,11 @@ h1 {
     super.dispose();
   }
 
-  Future<void> _checkServerStatus() async {
-    final isRunning = await _backgroundService.isServiceRunning();
+  void _checkServerStatus() {
     setState(() {
-      _isServerRunning = isRunning;
+      _isServerRunning = _localServer.isRunning;
       if (_isServerRunning) {
-        _serverUrl = 'http://localhost:8080';
+        _serverUrl = 'http://localhost:${_localServer.port}';
       }
     });
   }
@@ -148,7 +147,7 @@ h1 {
                   '• الرابط يعمل فقط للأجهزة المتصلة بنفس شبكة الواي فاي.'),
               const SizedBox(height: 12),
               _buildInstructionItem(
-                  '• الخادم يعمل في الخلفية حتى بعد إغلاق الشاشة.'),
+                  '• الخادم يعمل طالما التطبيق مفتوح أو بالخلفية القريبة، ويتوقف إذا أغلقت التطبيق بالكامل من قائمة التطبيقات الأخيرة.'),
             ],
           ),
         ),
@@ -179,17 +178,18 @@ h1 {
     setState(() => _isLoading = true);
     try {
       if (_isServerRunning) {
-        await _backgroundService.stopService();
+        await _localServer.stop();
         setState(() {
           _isServerRunning = false;
           _serverUrl = null;
         });
       } else {
         final fullHtml = _buildFullHtml();
-        await _backgroundService.startService(fullHtml);
+        _localServer.updateWebsite(fullHtml);
+        final url = await _localServer.start();
         setState(() {
           _isServerRunning = true;
-          _serverUrl = 'http://localhost:8080';
+          _serverUrl = url;
         });
       }
     } catch (e) {
@@ -197,7 +197,7 @@ h1 {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'فشل تشغيل الخادم',
+              'فشل تشغيل الخادم: $e',
               style: GoogleFonts.ibmPlexSansArabic(color: Colors.white),
             ),
             backgroundColor: Colors.red,

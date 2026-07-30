@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:shelf/shelf.dart';
-import 'package:shelf/shelf_io.dart' as io;
-import 'package:shelf_router/shelf_router.dart';
+import 'package:shelf/shelf_io.dart' as shelf_io;
 
 class LocalServerService {
   // Singleton pattern
@@ -10,32 +9,27 @@ class LocalServerService {
   LocalServerService._internal();
 
   HttpServer? _server;
-  final Router _router = Router();
   String? _currentHtml;
 
-  void _setupRouter() {
-    // يجب مسح المسارات القديمة وإعادة بنائها
-    _router.mount('/', (Request request) {
-      if (_currentHtml != null) {
-        return Response.ok(
-          _currentHtml!,
-          headers: {'Content-Type': 'text/html; charset=utf-8'},
-        );
-      }
-      return Response.notFound('No website hosted yet.');
-    });
+  Response _handler(Request request) {
+    if (_currentHtml != null) {
+      return Response.ok(
+        _currentHtml!,
+        headers: {'Content-Type': 'text/html; charset=utf-8'},
+      );
+    }
+    return Response.notFound('لا يوجد موقع مستضاف حالياً.');
   }
 
   Future<String> start({int port = 8080}) async {
     if (_server != null) {
       return 'http://localhost:${_server!.port}';
     }
-    _setupRouter();
     try {
-      _server = await io.serve(_router, InternetAddress.anyIPv4, port);
+      _server = await shelf_io.serve(_handler, InternetAddress.anyIPv4, port);
       return 'http://localhost:${_server!.port}';
     } catch (e) {
-      throw Exception('Failed to start server: $e');
+      throw Exception('فشل تشغيل الخادم: $e');
     }
   }
 
@@ -47,7 +41,6 @@ class LocalServerService {
 
   void updateWebsite(String htmlContent) {
     _currentHtml = htmlContent;
-    _setupRouter();
   }
 
   bool get isRunning => _server != null;
