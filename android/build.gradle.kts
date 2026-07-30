@@ -2,9 +2,13 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        // أضفنا مستودع Chaquopy هنا
+        maven { url = uri("https://chaquo.com/maven") }
     }
     dependencies {
         classpath("com.google.gms:google-services:4.4.2")
+        // أضفنا إضافة Chaquopy هنا
+        classpath("com.chaquo.python:gradle:15.0.0")
     }
 }
 
@@ -25,7 +29,7 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
     
-    // ✅ إجبار جميع المكتبات على استخدام compileSdk 36
+    // إجبار جميع المكتبات على استخدام compileSdk 36
     afterEvaluate {
         extensions.findByType<com.android.build.gradle.BaseExtension>()?.let { ext ->
             ext.compileSdkVersion(36)

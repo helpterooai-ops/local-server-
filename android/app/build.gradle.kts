@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
+    id("com.chaquo.python") // تفعيل إضافة بايثون
 }
 
 android {
@@ -12,7 +13,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-        // تفعيل الـ Desugaring لمكتبة الإشعارات
         isCoreLibraryDesugaringEnabled = true 
     }
 
@@ -22,11 +22,26 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // إعدادات المعماريات المطلوبة لـ Chaquopy
+        ndk {
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
+        }
     }
 
     buildTypes {
         getByName("release") {
             signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+}
+
+// إعدادات بايثون والمكتبات التي سيتم تحميلها داخل التطبيق
+chaquopy {
+    defaultConfig {
+        pip {
+            install("requests")
+            install("pyTelegramBotAPI") // مكتبة صنع بوتات التيليجرام
         }
     }
 }
@@ -41,7 +56,6 @@ tasks.configureEach {
     }
 }
 
-// البلوك الخاص بأداة الـ Desugaring
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
