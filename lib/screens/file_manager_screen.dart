@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
@@ -112,6 +113,53 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
       _allFiles.clear();
     });
     await _saveFiles();
+  }
+
+  // فتح الصورة في وضع ملء الشاشة
+  void _openImagePreview(String imagePath, String imageName) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            title: Text(
+              imageName,
+              style: GoogleFonts.ibmPlexSansArabic(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              child: Image.file(
+                File(imagePath),
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.broken_image, color: Colors.white54, size: 64),
+                      const SizedBox(height: 16),
+                      Text(
+                        'تعذر تحميل الصورة',
+                        style: GoogleFonts.ibmPlexSansArabic(color: Colors.white54),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   // تصنيف نوع الملف للترويسة
@@ -384,6 +432,8 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                           children: group.files.map((file) {
                             // إيجاد index الأصلي في القائمة الإجمالية
                             final originalIndex = _allFiles.indexOf(file);
+                            final bool isImage = _getFileCategory(file.extension) == FileCategory.image;
+                            
                             return ListTile(
                               leading: Icon(
                                 _getFileIcon(file.extension),
@@ -441,6 +491,11 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
                                   ),
                                 ],
                               ),
+                              onTap: () {
+                                if (isImage && file.path.isNotEmpty) {
+                                  _openImagePreview(file.path, file.name);
+                                }
+                              },
                             );
                           }).toList(),
                         ),
@@ -454,7 +509,7 @@ class _FileManagerScreenState extends State<FileManagerScreen> {
   }
 }
 
-// نماذج البيانات (Models) - يمكنك وضعها في ملف مستقل إذا أردت
+// نماذج البيانات (Models)
 enum FileCategory { image, video, app, other }
 
 class FileItem {

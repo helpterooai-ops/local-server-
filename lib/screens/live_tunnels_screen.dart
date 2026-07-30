@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/live_tunnel_service.dart';
-import '../screens/file_manager_screen.dart' show FileItem, FileCategory; // استيراد النماذج
+import '../screens/file_manager_screen.dart' show FileItem, FileCategory;
 
 class LiveTunnelsScreen extends StatefulWidget {
   const LiveTunnelsScreen({super.key});
@@ -17,12 +17,13 @@ class LiveTunnelsScreen extends StatefulWidget {
 class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
   final LiveTunnelService _tunnelService = LiveTunnelService();
   List<FileItem> _allFiles = [];
-  double _durationHours = 1.0; // 1 ساعة افتراضياً
+  double _durationHours = 1.0;
   String? _generatedLink;
   Timer? _expiryTimer;
   Duration _remaining = Duration.zero;
   bool _isServerRunning = false;
   bool _isLoading = false;
+  bool _isGenerating = false; // مؤشر منفصل لعملية التوليد
 
   // إعدادات الأمان
   bool _useStaticPassword = false;
@@ -37,7 +38,7 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
     _loadFiles();
     if (_tunnelService.isRunning) {
       _isServerRunning = true;
-      _generatedLink = 'http://${_getLocalIp()}:8080/retrieve?session=${_tunnelService.currentSession?.id}';
+      _generatedLink = 'http://localhost:8080/retrieve?session=${_tunnelService.currentSession?.id}';
       _startExpiryTimer();
     }
   }
@@ -63,7 +64,7 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
     }
   }
 
-  String _getLocalIp() => '192.168.1.5'; // يجب استبدالها بالحقيقة من الخدمة
+  String _getLocalIp() => 'localhost'; // يتم التحديث لاحقاً
 
   void _startExpiryTimer() {
     _expiryTimer?.cancel();
@@ -85,12 +86,16 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
   Future<void> _generateLink() async {
     if (_allFiles.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('لا توجد ملفات مختارة. انتقل إلى مدير الملفات أولاً.', style: GoogleFonts.ibmPlexSansArabic())),
+        SnackBar(content: Text('لا توجد ملفات مختارة. الرجاء الانتقال إلى مدير الملفات أولاً.', style: GoogleFonts.ibmPlexSansArabic())),
       );
       return;
     }
-    setState(() => _isLoading = true);
+    setState(() => _isGenerating = true);
     try {
+      // إيقاف مؤقت للخادم القديم إذا كان يعمل
+      if (_tunnelService.isRunning) {
+        await _tunnelService.stopServer();
+      }
       final session = LiveSession(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         filePaths: _allFiles.map((f) => f.path).toList(),
@@ -113,7 +118,7 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
         SnackBar(content: Text('فشل توليد الرابط: $e', style: GoogleFonts.ibmPlexSansArabic())),
       );
     } finally {
-      setState(() => _isLoading = false);
+      setState(() => _isGenerating = false);
     }
   }
 
@@ -157,7 +162,9 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
                   SwitchListTile(
                     title: Text('كلمة مرور ثابتة', style: GoogleFonts.ibmPlexSansArabic()),
                     value: _useStaticPassword,
-                    onChanged: (val) => setSheetState(() => _useStaticPassword = val),
+                    onChanged: (val) => setSheetState(() {
+                      _useStaticPassword = val;
+                    }),
                   ),
                   if (_useStaticPassword)
                     Padding(
@@ -174,13 +181,17 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
                   SwitchListTile(
                     title: Text('كلمة مرور لمرة واحدة (OTP)', style: GoogleFonts.ibmPlexSansArabic()),
                     value: _useOtp,
-                    onChanged: (val) => setSheetState(() => _useOtp = val),
+                    onChanged: (val) => setSheetState(() {
+                      _useOtp = val;
+                    }),
                   ),
                   const SizedBox(height: 12),
                   SwitchListTile(
                     title: Text('تقييد عنوان IP', style: GoogleFonts.ibmPlexSansArabic()),
                     value: _useIpRestriction,
-                    onChanged: (val) => setSheetState(() => _useIpRestriction = val),
+                    onChanged: (val) => setSheetState(() {
+                      _useIpRestriction = val;
+                    }),
                   ),
                   if (_useIpRestriction)
                     Padding(
@@ -198,7 +209,7 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: Text('تم', style: GoogleFonts.ibmPlexSansArabic()),
+                      child: Text('حفظ الإعدادات', style: GoogleFonts.ibmPlexSansArabic()),
                     ),
                   ),
                 ],
@@ -233,27 +244,58 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // شريط اختيار المدة
-            Text('مدة الصلاحية', style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w600)),
+            // --- القسم العلوي: إعدادات الأمان والمدة ---
+            Text('إعدادات الرابط', style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w700, fontSize: 16)),
+            const SizedBox(height: 12),
+            // مدة الصلاحية
+            Text('مدة الصلاحية: ${_durationHours.toStringAsFixed(1)} ساعة', style: GoogleFonts.ibmPlexSansArabic(color: colorScheme.primary)),
             Slider(
               value: _durationHours,
               min: 0.5,
               max: 24,
               divisions: 47,
-              label: '${_durationHours.toStringAsFixed(1)} ساعة',
-              onChanged: (val) => setState(() => _durationHours = val),
+              onChanged: _isServerRunning ? null : (val) => setState(() => _durationHours = val),
             ),
-            Text('${_durationHours.toStringAsFixed(1)} ساعة', style: GoogleFonts.ibmPlexSansArabic(color: colorScheme.primary)),
-            const SizedBox(height: 20),
-            // زر إعدادات الأمان
+            const SizedBox(height: 12),
+            // زر إعدادات الأمان (يظهر قبل توليد الرابط)
             OutlinedButton.icon(
-              onPressed: _showSecurityBottomSheet,
+              onPressed: _isServerRunning ? null : _showSecurityBottomSheet,
               icon: const Icon(Icons.security),
               label: Text('إعدادات الأمان', style: GoogleFonts.ibmPlexSansArabic()),
             ),
             const SizedBox(height: 20),
-            // عرض الرابط إذا كان موجوداً
-            if (_isServerRunning && _generatedLink != null) ...[
+            
+            // --- قسم محتوى الجلسة ---
+            if (_allFiles.isNotEmpty) ...[
+              Text('الملفات المحددة للمشاركة:', style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              ...(_allFiles.map((file) => ListTile(
+                leading: Icon(Icons.insert_drive_file, color: colorScheme.primary),
+                title: Text(file.name, style: GoogleFonts.ibmPlexSansArabic()),
+                subtitle: Text(file.isHidden ? 'مخفي' : 'ظاهر', style: GoogleFonts.ibmPlexSansArabic(color: file.isHidden ? Colors.red : Colors.green)),
+              ))),
+              const SizedBox(height: 20),
+            ] else ...[
+              Text('لا توجد ملفات. انتقل إلى مدير الملفات لإضافة ملفات.', style: GoogleFonts.ibmPlexSansArabic(color: Colors.grey)),
+              const SizedBox(height: 20),
+            ],
+
+            // --- قسم توليد الرابط / عرض الرابط الحي ---
+            if (!_isServerRunning)
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: _isGenerating ? null : _generateLink,
+                  icon: _isGenerating ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.link),
+                  label: Text(_isGenerating ? 'جارٍ إنشاء الرابط...' : 'إنشاء رابط', style: GoogleFonts.ibmPlexSansArabic()),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+                  ),
+                ),
+              )
+            else ...[
+              // عرض الرابط الحي
               Text('الرابط الحي:', style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Container(
@@ -288,15 +330,6 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
                 icon: const Icon(Icons.stop),
                 label: Text('إيقاف وإغلاق الرابط', style: GoogleFonts.ibmPlexSansArabic()),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-              ),
-            ] else ...[
-              // زر توليد الرابط
-              Center(
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _generateLink,
-                  icon: const Icon(Icons.link),
-                  label: Text('توليد الرابط', style: GoogleFonts.ibmPlexSansArabic()),
-                ),
               ),
             ],
           ],

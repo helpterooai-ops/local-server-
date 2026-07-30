@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class RetrieveScreen extends StatefulWidget {
   const RetrieveScreen({super.key});
@@ -14,6 +13,7 @@ class _RetrieveScreenState extends State<RetrieveScreen> {
   final TextEditingController _linkController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String? _content;
+  List<String> _fileList = [];
   bool _isLoading = false;
   bool _showPasswordField = false;
 
@@ -21,6 +21,7 @@ class _RetrieveScreenState extends State<RetrieveScreen> {
     setState(() {
       _isLoading = true;
       _content = null;
+      _fileList = [];
     });
 
     try {
@@ -29,20 +30,35 @@ class _RetrieveScreenState extends State<RetrieveScreen> {
         setState(() => _content = 'الرابط غير صالح.');
         return;
       }
-      // إضافة هيدر التطبيق
+      
+      final headers = <String, String>{
+        'x-pocket-client': 'pocket_cloud_host',
+      };
+      
+      var queryParams = Map<String, String>.from(uri.queryParameters);
+      if (_passwordController.text.isNotEmpty) {
+        queryParams['pass'] = _passwordController.text;
+      }
+      
       final response = await http.get(
-        uri.replace(queryParameters: {
-          ...uri.queryParameters,
-          if (_passwordController.text.isNotEmpty) 'pass': _passwordController.text,
-        }),
-        headers: {'x-pocket-client': 'pocket_cloud_host'},
+        uri.replace(queryParameters: queryParams),
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
-        setState(() {
-          _content = response.body;
-          _showPasswordField = false;
-        });
+        final body = response.body;
+        // إذا كان الرد يحتوي على سطور، نعرضها كقائمة
+        if (body.contains('\n')) {
+          setState(() {
+            _fileList = body.split('\n').where((line) => line.trim().isNotEmpty).toList();
+            _showPasswordField = false;
+          });
+        } else {
+          setState(() {
+            _content = body;
+            _showPasswordField = false;
+          });
+        }
       } else if (response.statusCode == 403) {
         setState(() {
           _content = response.body;
@@ -82,7 +98,7 @@ class _RetrieveScreenState extends State<RetrieveScreen> {
             TextField(
               controller: _linkController,
               decoration: InputDecoration(
-                labelText: 'أدخل رابط الاسترداد أو كود الجلسة',
+                labelText: 'أدخل رابط الاسترداد',
                 labelStyle: GoogleFonts.ibmPlexSansArabic(),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -107,6 +123,19 @@ class _RetrieveScreenState extends State<RetrieveScreen> {
             ),
             const SizedBox(height: 20),
             if (_isLoading) const CircularProgressIndicator(),
+            if (_fileList.isNotEmpty)
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _fileList.length,
+                  itemBuilder: (context, index) => ListTile(
+                    leading: const Icon(Icons.insert_drive_file, color: Color(0xFF3182CE)),
+                    title: Text(
+                      _fileList[index],
+                      style: GoogleFonts.ibmPlexSansArabic(fontSize: 14),
+                    ),
+                  ),
+                ),
+              ),
             if (_content != null)
               Expanded(
                 child: SingleChildScrollView(
@@ -116,7 +145,7 @@ class _RetrieveScreenState extends State<RetrieveScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(_content!, style: const TextStyle(fontFamily: 'monospace')),
+                    child: Text(_content!, style: GoogleFonts.ibmPlexSansArabic(fontSize: 14)),
                   ),
                 ),
               ),
