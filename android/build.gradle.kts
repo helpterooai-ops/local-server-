@@ -7,8 +7,8 @@ buildscript {
     }
     dependencies {
         classpath("com.google.gms:google-services:4.4.2")
-        // أضفنا إضافة Chaquopy هنا
-        classpath("com.chaquo.python:gradle:15.0.0")
+        // تم تصحيح رقم الإصدار إلى النسخة المتوفرة والمستقرة
+        classpath("com.chaquo.python:gradle:14.0.2")
     }
 }
 
