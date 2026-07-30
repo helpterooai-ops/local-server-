@@ -44,17 +44,23 @@ class MainActivity : FlutterActivity() {
                                 }
                             }
                         }
-                        // نرجع للواجهة فوراً أن البوت قيد التشغيل (لا ننتظر انتهاء الحلقة)
-                        result.success("تم تشغيل البوت في الخلفية بنجاح.")
+                        // لا نرسل result.success هنا! ننتظر انتهاء thread
                     } else {
                         result.error("INVALID_CODE", "الكود فارغ", null)
                     }
                 }
                 "stopPythonBot" -> {
-                    // إيقاف الـ Thread الذي يعمل عليه البوت
                     botThread?.interrupt()
                     botThread = null
-                    result.success("تم إيقاف البوت.")
+                    // استدعاء stop_bot() في بايثون لتنظيف الحالة
+                    try {
+                        val py = Python.getInstance()
+                        val module = py.getModule("runner")
+                        val output = module.callAttr("stop_bot").toString()
+                        result.success(output)
+                    } catch (e: Exception) {
+                        result.success("تم إيقاف البوت.")
+                    }
                 }
                 else -> result.notImplemented()
             }
