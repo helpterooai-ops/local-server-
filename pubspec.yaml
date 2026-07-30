@@ -40,6 +40,9 @@ dependencies:
   file_picker: ^8.0.3
   permission_handler: ^11.3.1
 
+  # تخزين محلي
+  shared_preferences: ^2.5.5
+
   # التعامل مع HTML و CSS
   # flutter_html: ^3.0.0-beta.2
 
@@ -54,7 +57,7 @@ dependencies:
   # إدارة المؤقتات (Self-Destruct Timers)
   # cron: ^0.6.1
 
-  # تخزين محلي
+  # تخزين محلي (Hive) - معلق مؤقتاً
   # hive: ^2.2.3
   # hive_flutter: ^1.1.0
 
