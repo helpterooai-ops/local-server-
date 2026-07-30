@@ -7,7 +7,7 @@ import '../services/telegram_service.dart';
 import 'web_hosting_screen.dart';
 import 'telegram_bots_screen.dart';
 import 'file_manager_screen.dart';
-import 'live_tunnels_screen.dart';
+import 'live_tunnels_screen.dart' as live_tunnels; // استيراد مستعار لتجنب التعارض
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      drawer: AppDrawer(), // إزالة const
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: Text(
           'لوحة التحكم',
@@ -193,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => LiveTunnelsScreen()), // إزالة const
+                  MaterialPageRoute(builder: (context) => live_tunnels.LiveTunnelsScreen()),
                 );
               },
             ),
