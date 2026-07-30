@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/local_server_service.dart';
+import '../services/telegram_service.dart';
 
 class ServerDashboardScreen extends StatefulWidget {
   const ServerDashboardScreen({super.key});
@@ -9,15 +12,46 @@ class ServerDashboardScreen extends StatefulWidget {
 }
 
 class _ServerDashboardScreenState extends State<ServerDashboardScreen> {
-  // جميع القيم صفرية وجاهزة للتوصيل بالبيانات الحقيقية مستقبلاً
-  final int _activeHostings = 0;
-  final int _activeBots = 0;
-  final int _storedFiles = 0;
-  final int _connectedVisitors = 0;
-  final double _cpuUsage = 0.0;
-  final double _memoryUsage = 0.0;
-  final double _dataTransfer = 0.0; // GB
-  final bool _isServerRunning = false;
+  // قيم ديناميكية يتم تحديثها
+  int _activeHostings = 0;
+  int _activeBots = 0;
+  int _storedFiles = 0; // سيتم ربطه لاحقاً
+  int _connectedVisitors = 0;
+  double _cpuUsage = 0.0;
+  double _memoryUsage = 0.0;
+  double _dataTransfer = 0.0;
+  bool _isServerRunning = false;
+
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateData();
+    // تحديث البيانات كل ثانيتين للحصول على قراءات شبه حية
+    _refreshTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      _updateData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _updateData() {
+    final server = LocalServerService();
+    final botService = TelegramBotService();
+    if (!mounted) return;
+    setState(() {
+      _isServerRunning = server.isRunning;
+      _activeHostings = server.isRunning ? 1 : 0; // استضافة واحدة نشطة
+      _activeBots = botService.isRunning ? 1 : 0; // بوت واحد نشط
+      // الأرقام الأخرى تبقى صفرًا مؤقتًا حتى تتوفر مصادر حقيقية
+      // يمكن تقدير CPU/RAM عبر نظام التشغيل لاحقًا
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

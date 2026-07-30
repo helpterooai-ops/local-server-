@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TelegramBotsScreen extends StatefulWidget {
   const TelegramBotsScreen({super.key});
@@ -20,30 +21,43 @@ class _TelegramBotsScreenState extends State<TelegramBotsScreen> {
   bool _isTestMode = false;
   String? _consoleMessage;
 
+  // دوال الحفظ والاسترجاع
+  Future<void> _saveData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('bot_token', _tokenController.text);
+    await prefs.setString('bot_code', _codeController.text);
+    await prefs.setBool('bot_is_test_mode', _isTestMode);
+  }
+
+  Future<void> _saveRunningState(bool running) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('bot_is_running', running);
+  }
+
+  Future<void> _loadData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _tokenController.text = prefs.getString('bot_token') ?? '';
+      _codeController.text = prefs.getString('bot_code') ?? _codeController.text;
+      _isTestMode = prefs.getBool('bot_is_test_mode') ?? false;
+      // لا نستعيد حالة التشغيل تلقائيًا لأنها قد تكون غير دقيقة
+      // بعد إعادة تشغيل التطبيق
+    });
+  }
+
   @override
   void initState() {
     super.initState();
-    // قالب الكود الافتراضي (بدون تعريف التوكن لأنه سيُحقن تلقائياً)
-    _codeController.text = '''import telebot
-
-# المتغير TOKEN يتم حقنه تلقائياً في الخلفية من الحقل العلوي
-# يمكنك استخدامه مباشرة كما في السطر التالي:
-bot = telebot.TeleBot(TOKEN)
-
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.reply_to(message, "مرحباً! البوت يعمل بنجاح بكودك الخاص! 🚀")
-
-@bot.message_handler(func=lambda message: True)
-def echo_all(message):
-    bot.reply_to(message, "أنت قلت: " + message.text)
-
-# تشغيل البوت
-bot.infinity_polling()''';
+    _loadData();
+    // حفظ أي تغيير يطرأ على النصوص
+    _tokenController.addListener(_saveData);
+    _codeController.addListener(_saveData);
   }
 
   @override
   void dispose() {
+    _tokenController.removeListener(_saveData);
+    _codeController.removeListener(_saveData);
     _tokenController.dispose();
     _codeController.dispose();
     super.dispose();
@@ -63,6 +77,7 @@ bot.infinity_polling()''';
           _isRunning = false;
           _consoleMessage = result;
         });
+        _saveRunningState(false);
       } else {
         // التحقق من التوكن
         final token = _tokenController.text.trim();
@@ -107,12 +122,14 @@ bot.infinity_polling()
           _isRunning = true;
           _consoleMessage = result;
         });
+        _saveRunningState(true);
       }
     } on PlatformException catch (e) {
       setState(() {
         _consoleMessage = 'خطأ: ${e.message}';
         _isRunning = false;
       });
+      _saveRunningState(false);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -205,6 +222,7 @@ bot.infinity_polling()
                     : (val) {
                         setState(() {
                           _isTestMode = val;
+                          _saveData(); // حفظ مباشر
                         });
                       },
               ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/app_drawer.dart';
 import '../services/local_server_service.dart';
+import '../services/telegram_service.dart';
 import 'web_hosting_screen.dart';
 import 'telegram_bots_screen.dart';
 import 'file_manager_screen.dart';
@@ -19,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final double _storageUsed = 0.0;
   final int _activeTunnels = 0;
   bool _isServerActive = LocalServerService().isRunning;
+  bool _isBotActive = TelegramBotService().isRunning;
 
   @override
   void initState() {
@@ -43,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void _refreshServerStatus() {
     setState(() {
       _isServerActive = LocalServerService().isRunning;
+      _isBotActive = TelegramBotService().isRunning;
     });
   }
 
@@ -155,13 +158,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               context,
               icon: Icons.smart_toy_outlined,
               title: 'بوتات تيليجرام',
-              subtitle: 'تشغيل بوتات محلية في الخلفية',
-              color: const Color(0xFF00A3C4),
-              onTap: () {
-                Navigator.push(
+              subtitle: _isBotActive ? 'بوت نشط يعمل الآن' : 'تشغيل بوتات محلية في الخلفية',
+              color: _isBotActive ? const Color(0xFF38A169) : const Color(0xFF00A3C4),
+              isActive: _isBotActive,
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const TelegramBotsScreen()),
                 );
+                _refreshServerStatus();
               },
             ),
             const SizedBox(height: 12),
