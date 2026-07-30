@@ -1,13 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/app_drawer.dart';
+import '../widgets/app_drawer.dart' as drawer_widget; // استيراد مستعار لتجنب التعارض
 import '../services/local_server_service.dart';
 import '../services/telegram_service.dart';
 import 'web_hosting_screen.dart';
 import 'telegram_bots_screen.dart';
 import 'file_manager_screen.dart';
-import 'live_tunnels_screen.dart' as live_tunnels; // استيراد مستعار لتجنب التعارض
+import 'live_tunnels_screen.dart' as live_tunnels;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      drawer: AppDrawer(),
+      drawer: const drawer_widget.AppDrawer(), // استخدام الاسم المستعار
       appBar: AppBar(
         title: Text(
           'لوحة التحكم',
