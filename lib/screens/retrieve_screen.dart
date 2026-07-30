@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 class RetrieveScreen extends StatefulWidget {
   const RetrieveScreen({super.key});
@@ -12,22 +15,20 @@ class RetrieveScreen extends StatefulWidget {
 class _RetrieveScreenState extends State<RetrieveScreen> {
   final TextEditingController _linkController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  String? _content;
-  List<String> _fileList = [];
+  List<Map<String, String>> _fileList = [];
   bool _isLoading = false;
   bool _showPasswordField = false;
 
   Future<void> _retrieve() async {
     setState(() {
       _isLoading = true;
-      _content = null;
       _fileList = [];
     });
 
     try {
       final uri = Uri.tryParse(_linkController.text.trim());
       if (uri == null) {
-        setState(() => _content = 'الرابط غير صالح.');
+        _showMessage('الرابط غير صالح.');
         return;
       }
       
@@ -47,30 +48,74 @@ class _RetrieveScreenState extends State<RetrieveScreen> {
 
       if (response.statusCode == 200) {
         final body = response.body;
-        // إذا كان الرد يحتوي على سطور، نعرضها كقائمة
-        if (body.contains('\n')) {
-          setState(() {
-            _fileList = body.split('\n').where((line) => line.trim().isNotEmpty).toList();
-            _showPasswordField = false;
-          });
-        } else {
-          setState(() {
-            _content = body;
-            _showPasswordField = false;
-          });
-        }
-      } else if (response.statusCode == 403) {
+        // تحليل النص المستلم إلى قائمة ملفات
         setState(() {
-          _content = response.body;
-          _showPasswordField = _content!.contains('كلمة المرور');
+          _fileList = _parseFileList(body);
+          _showPasswordField = false;
         });
+      } else if (response.statusCode == 403) {
+        _showMessage(response.body);
+        setState(() => _showPasswordField = response.body.contains('كلمة المرور'));
       } else {
-        setState(() => _content = 'خطأ: ${response.statusCode}');
+        _showMessage('خطأ: ${response.statusCode}');
       }
     } catch (e) {
-      setState(() => _content = 'فشل الاتصال: $e');
+      _showMessage('فشل الاتصال: $e');
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  List<Map<String, String>> _parseFileList(String body) {
+    // مثال صيغة: [{name: file1.jpg, download_url: http://...}, {name: file2.pdf, download_url: http://...}]
+    List<Map<String, String>> files = [];
+    try {
+      // تنظيف النص قليلاً
+      String cleanBody = body.replaceAll('{', '').replaceAll('}', '').replaceAll('[', '').replaceAll(']', '');
+      List<String> items = cleanBody.split(', ');
+      Map<String, String> currentFile = {};
+      for (String item in items) {
+        if (item.startsWith('name:')) {
+          currentFile['name'] = item.substring(5).trim();
+        } else if (item.startsWith('download_url:')) {
+          currentFile['download_url'] = item.substring(13).trim();
+          if (currentFile.containsKey('name')) {
+            files.add(Map<String, String>.from(currentFile));
+            currentFile = {};
+          }
+        }
+      }
+    } catch (e) {
+      _showMessage('فشل تحليل البيانات: $e');
+    }
+    return files;
+  }
+
+  void _showMessage(String msg) {
+    setState(() {
+      // عرض رسالة الخطأ في الواجهة
+      _fileList = [{'name': msg, 'download_url': ''}];
+    });
+  }
+
+  Future<void> _downloadFile(String url, String fileName) async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final filePath = '${dir.path}/$fileName';
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'x-pocket-client': 'pocket_cloud_host'},
+      );
+      if (response.statusCode == 200) {
+        File file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+        // محاولة فتح الملف بعد التحميل
+        await OpenFile.open(filePath);
+      } else {
+        _showMessage('فشل تحميل الملف');
+      }
+    } catch (e) {
+      _showMessage('فشل تحميل الملف: $e');
     }
   }
 
@@ -127,26 +172,18 @@ class _RetrieveScreenState extends State<RetrieveScreen> {
               Expanded(
                 child: ListView.builder(
                   itemCount: _fileList.length,
-                  itemBuilder: (context, index) => ListTile(
-                    leading: const Icon(Icons.insert_drive_file, color: Color(0xFF3182CE)),
-                    title: Text(
-                      _fileList[index],
-                      style: GoogleFonts.ibmPlexSansArabic(fontSize: 14),
-                    ),
-                  ),
-                ),
-              ),
-            if (_content != null)
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(_content!, style: GoogleFonts.ibmPlexSansArabic(fontSize: 14)),
-                  ),
+                  itemBuilder: (context, index) {
+                    final file = _fileList[index];
+                    final bool isDownloadable = file['download_url']?.isNotEmpty == true;
+                    return ListTile(
+                      leading: const Icon(Icons.insert_drive_file, color: Color(0xFF3182CE)),
+                      title: Text(file['name'] ?? 'ملف', style: GoogleFonts.ibmPlexSansArabic(fontSize: 14)),
+                      trailing: isDownloadable ? IconButton(
+                        icon: const Icon(Icons.file_download, color: Colors.blue),
+                        onPressed: () => _downloadFile(file['download_url']!, file['name']!),
+                      ) : null,
+                    );
+                  },
                 ),
               ),
           ],

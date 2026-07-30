@@ -12,7 +12,6 @@ class LiveSession {
   final String? staticPassword;
   final bool useOtp;
   String? otpPassword;
-  final List<String> allowedIps;
   DateTime expiry;
   bool isOtpConsumed;
 
@@ -24,7 +23,6 @@ class LiveSession {
     this.staticPassword,
     this.useOtp = false,
     this.otpPassword,
-    this.allowedIps = const [],
     DateTime? expiry,
     this.isOtpConsumed = false,
   }) : expiry = expiry ?? DateTime.now().add(Duration(minutes: durationMinutes));
@@ -47,7 +45,7 @@ class LiveTunnelService {
     }
     final router = Router();
     router.get('/retrieve', _handleRetrieveRequest);
-    router.get('/file', _handleFileRequest);
+    router.get('/file', _handleFileDownload);
 
     _server = await io.serve(router, InternetAddress.anyIPv4, 8080);
     final ip = await _getLocalIp();
@@ -81,12 +79,6 @@ class LiveTunnelService {
     if (_activeSession!.isExpired) {
       return Response.forbidden('انتهت صلاحية الرابط.');
     }
-    if (_activeSession!.allowedIps.isNotEmpty) {
-      final clientIp = request.headers['x-forwarded-for'] ?? '';
-      if (!_activeSession!.allowedIps.contains(clientIp)) {
-        return Response.forbidden('عنوان IP غير مسموح به.');
-      }
-    }
     if (_activeSession!.staticPassword != null) {
       final password = request.url.queryParameters['pass'];
       if (password != _activeSession!.staticPassword) {
@@ -106,17 +98,46 @@ class LiveTunnelService {
       }
       _activeSession!.isOtpConsumed = true;
     }
-    final visibleFiles = _activeSession!.filePaths
-        .where((path) => _activeSession!.fileVisibility[path] != false)
-        .toList();
+    // توليد JSON يحتوي على أسماء الملفات وروابط التحميل
+    final visibleFiles = <Map<String, String>>[];
+    for (int i = 0; i < _activeSession!.filePaths.length; i++) {
+      if (_activeSession!.fileVisibility[_activeSession!.filePaths[i]] != false) {
+        visibleFiles.add({
+          'name': _activeSession!.filePaths[i].split('/').last,
+          'download_url': 'http://localhost:8080/file?session=${_activeSession!.id}&index=$i',
+        });
+      }
+    }
     return Response.ok(
-      visibleFiles.join('\n'),
+      visibleFiles.toString(),
       headers: {'Content-Type': 'text/plain; charset=utf-8'},
     );
   }
 
-  Future<Response> _handleFileRequest(Request request) async {
-    return Response.notFound('غير مطبق بعد');
+  Future<Response> _handleFileDownload(Request request) async {
+    final sessionId = request.url.queryParameters['session'];
+    final indexStr = request.url.queryParameters['index'];
+    if (sessionId != _activeSession?.id || indexStr == null) {
+      return Response.notFound('ملف غير موجود');
+    }
+    final index = int.tryParse(indexStr);
+    if (index == null || index >= _activeSession!.filePaths.length) {
+      return Response.notFound('ملف غير موجود');
+    }
+    final filePath = _activeSession!.filePaths[index];
+    final file = File(filePath);
+    if (!await file.exists()) {
+      return Response.notFound('الملف غير موجود على الخادم');
+    }
+    final bytes = await file.readAsBytes();
+    final fileName = filePath.split('/').last;
+    return Response.ok(
+      bytes,
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': 'attachment; filename="$fileName"',
+      },
+    );
   }
 
   String _generateOtp() {

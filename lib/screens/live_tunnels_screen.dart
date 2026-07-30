@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/live_tunnel_service.dart';
-import '../screens/file_manager_screen.dart' show FileItem, FileCategory;
+import '../screens/file_manager_screen.dart' show FileItem;
 
 class LiveTunnelsScreen extends StatefulWidget {
   const LiveTunnelsScreen({super.key});
@@ -22,15 +22,12 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
   Timer? _expiryTimer;
   Duration _remaining = Duration.zero;
   bool _isServerRunning = false;
-  bool _isLoading = false;
-  bool _isGenerating = false; // مؤشر منفصل لعملية التوليد
+  bool _isGenerating = false;
 
   // إعدادات الأمان
   bool _useStaticPassword = false;
   bool _useOtp = false;
-  bool _useIpRestriction = false;
   TextEditingController _staticPasswordController = TextEditingController();
-  TextEditingController _ipController = TextEditingController();
 
   @override
   void initState() {
@@ -47,7 +44,6 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
   void dispose() {
     _expiryTimer?.cancel();
     _staticPasswordController.dispose();
-    _ipController.dispose();
     super.dispose();
   }
 
@@ -63,8 +59,6 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
       } catch (_) {}
     }
   }
-
-  String _getLocalIp() => 'localhost'; // يتم التحديث لاحقاً
 
   void _startExpiryTimer() {
     _expiryTimer?.cancel();
@@ -92,7 +86,6 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
     }
     setState(() => _isGenerating = true);
     try {
-      // إيقاف مؤقت للخادم القديم إذا كان يعمل
       if (_tunnelService.isRunning) {
         await _tunnelService.stopServer();
       }
@@ -103,7 +96,6 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
         durationMinutes: (_durationHours * 60).round(),
         staticPassword: _useStaticPassword ? _staticPasswordController.text : null,
         useOtp: _useOtp,
-        allowedIps: _useIpRestriction && _ipController.text.isNotEmpty ? [_ipController.text] : [],
       );
       final link = await _tunnelService.startServer(session);
       setState(() {
@@ -138,82 +130,70 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
     await prefs.setBool('live_tunnel_active', _isServerRunning);
   }
 
-  void _showSecurityBottomSheet() {
-    showModalBottomSheet(
+  void _showSecurityAndGenerateDialog() {
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (ctx) {
         return StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 24, right: 24, top: 24,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('إعدادات الأمان', style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w700, fontSize: 18)),
-                  const SizedBox(height: 20),
-                  SwitchListTile(
-                    title: Text('كلمة مرور ثابتة', style: GoogleFonts.ibmPlexSansArabic()),
-                    value: _useStaticPassword,
-                    onChanged: (val) => setSheetState(() {
-                      _useStaticPassword = val;
-                    }),
-                  ),
-                  if (_useStaticPassword)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextField(
-                        controller: _staticPasswordController,
-                        decoration: InputDecoration(
-                          labelText: 'كلمة المرور',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          builder: (ctx, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text('إعدادات الأمان', style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w700)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SwitchListTile(
+                      title: Text('كلمة مرور ثابتة', style: GoogleFonts.ibmPlexSansArabic()),
+                      value: _useStaticPassword,
+                      onChanged: (val) => setDialogState(() {
+                        _useStaticPassword = val;
+                      }),
+                    ),
+                    if (_useStaticPassword)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: TextField(
+                          controller: _staticPasswordController,
+                          decoration: InputDecoration(
+                            labelText: 'كلمة المرور',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
                         ),
                       ),
+                    const SizedBox(height: 12),
+                    SwitchListTile(
+                      title: Text('كلمة مرور لمرة واحدة (OTP)', style: GoogleFonts.ibmPlexSansArabic()),
+                      value: _useOtp,
+                      onChanged: (val) => setDialogState(() {
+                        _useOtp = val;
+                      }),
                     ),
-                  const SizedBox(height: 12),
-                  SwitchListTile(
-                    title: Text('كلمة مرور لمرة واحدة (OTP)', style: GoogleFonts.ibmPlexSansArabic()),
-                    value: _useOtp,
-                    onChanged: (val) => setSheetState(() {
-                      _useOtp = val;
-                    }),
-                  ),
-                  const SizedBox(height: 12),
-                  SwitchListTile(
-                    title: Text('تقييد عنوان IP', style: GoogleFonts.ibmPlexSansArabic()),
-                    value: _useIpRestriction,
-                    onChanged: (val) => setSheetState(() {
-                      _useIpRestriction = val;
-                    }),
-                  ),
-                  if (_useIpRestriction)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextField(
-                        controller: _ipController,
-                        decoration: InputDecoration(
-                          labelText: 'عنوان IP المسموح به',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
+                    const SizedBox(height: 12),
+                    SwitchListTile(
+                      title: Text('بدون كلمة مرور', style: GoogleFonts.ibmPlexSansArabic()),
+                      value: !_useStaticPassword && !_useOtp,
+                      onChanged: (val) => setDialogState(() {
+                        _useStaticPassword = false;
+                        _useOtp = false;
+                      }),
                     ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: Text('حفظ الإعدادات', style: GoogleFonts.ibmPlexSansArabic()),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('إلغاء', style: GoogleFonts.ibmPlexSansArabic()),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _generateLink();
+                  },
+                  child: Text('توليد الرابط', style: GoogleFonts.ibmPlexSansArabic()),
+                ),
+              ],
             );
           },
         );
@@ -244,10 +224,6 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- القسم العلوي: إعدادات الأمان والمدة ---
-            Text('إعدادات الرابط', style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w700, fontSize: 16)),
-            const SizedBox(height: 12),
-            // مدة الصلاحية
             Text('مدة الصلاحية: ${_durationHours.toStringAsFixed(1)} ساعة', style: GoogleFonts.ibmPlexSansArabic(color: colorScheme.primary)),
             Slider(
               value: _durationHours,
@@ -256,16 +232,7 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
               divisions: 47,
               onChanged: _isServerRunning ? null : (val) => setState(() => _durationHours = val),
             ),
-            const SizedBox(height: 12),
-            // زر إعدادات الأمان (يظهر قبل توليد الرابط)
-            OutlinedButton.icon(
-              onPressed: _isServerRunning ? null : _showSecurityBottomSheet,
-              icon: const Icon(Icons.security),
-              label: Text('إعدادات الأمان', style: GoogleFonts.ibmPlexSansArabic()),
-            ),
             const SizedBox(height: 20),
-            
-            // --- قسم محتوى الجلسة ---
             if (_allFiles.isNotEmpty) ...[
               Text('الملفات المحددة للمشاركة:', style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
@@ -279,14 +246,12 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
               Text('لا توجد ملفات. انتقل إلى مدير الملفات لإضافة ملفات.', style: GoogleFonts.ibmPlexSansArabic(color: Colors.grey)),
               const SizedBox(height: 20),
             ],
-
-            // --- قسم توليد الرابط / عرض الرابط الحي ---
             if (!_isServerRunning)
               Center(
                 child: ElevatedButton.icon(
-                  onPressed: _isGenerating ? null : _generateLink,
-                  icon: _isGenerating ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.link),
-                  label: Text(_isGenerating ? 'جارٍ إنشاء الرابط...' : 'إنشاء رابط', style: GoogleFonts.ibmPlexSansArabic()),
+                  onPressed: _showSecurityAndGenerateDialog,
+                  icon: const Icon(Icons.link),
+                  label: Text('إنشاء رابط', style: GoogleFonts.ibmPlexSansArabic()),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorScheme.primary,
                     foregroundColor: Colors.white,
@@ -295,7 +260,6 @@ class _LiveTunnelsScreenState extends State<LiveTunnelsScreen> {
                 ),
               )
             else ...[
-              // عرض الرابط الحي
               Text('الرابط الحي:', style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Container(
