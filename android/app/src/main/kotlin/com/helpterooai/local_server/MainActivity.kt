@@ -2,6 +2,7 @@ package com.helpterooai.local_server
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -12,6 +13,7 @@ import kotlin.concurrent.thread
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.bot_maker/python_channel"
+    private val TAG = "PythonBotChannel"
     private var botThread: Thread? = null
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
@@ -33,14 +35,19 @@ class MainActivity : FlutterActivity() {
                                 val py = Python.getInstance()
                                 val module = py.getModule("runner")
                                 val output = module.callAttr("execute_code", code).toString()
-                                
-                                // إرجاع النتيجة للواجهة عبر الـ UI Thread
+
                                 Handler(Looper.getMainLooper()).post {
                                     result.success(output)
                                 }
-                            } catch (e: Exception) {
+                            } catch (e: Throwable) {
+                                // Throwable بدل Exception — عشان نمسك حتى أخطاء
+                                // نوع Error (مثل UnsatisfiedLinkError) اللي كانت
+                                // تفلت من الكود القديم وتقفل التطبيق بصمت كامل
+                                val fullError =
+                                    "${e.javaClass.name}: ${e.message}\n${Log.getStackTraceString(e)}"
+                                Log.e(TAG, "Python bot crashed:\n$fullError")
                                 Handler(Looper.getMainLooper()).post {
-                                    result.error("PYTHON_ERROR", e.message, null)
+                                    result.error("PYTHON_ERROR", fullError, null)
                                 }
                             }
                         }
@@ -50,15 +57,14 @@ class MainActivity : FlutterActivity() {
                     }
                 }
                 "stopPythonBot" -> {
-                    botThread?.interrupt()
                     botThread = null
-                    // استدعاء stop_bot() في بايثون لتنظيف الحالة
                     try {
                         val py = Python.getInstance()
                         val module = py.getModule("runner")
                         val output = module.callAttr("stop_bot").toString()
                         result.success(output)
-                    } catch (e: Exception) {
+                    } catch (e: Throwable) {
+                        Log.e(TAG, "stopPythonBot failed: ${e.message}")
                         result.success("تم إيقاف البوت.")
                     }
                 }
