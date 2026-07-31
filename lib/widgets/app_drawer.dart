@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../screens/profile_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/server_dashboard_screen.dart';
-import '../screens/retrieve_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -23,6 +22,7 @@ class _AppDrawerState extends State<AppDrawer> {
   }
 
   Future<void> _loadUser() async {
+    // إعادة تحميل بيانات المستخدم لضمان تحديث displayName
     await FirebaseAuth.instance.currentUser?.reload();
     setState(() {
       _user = FirebaseAuth.instance.currentUser;
@@ -157,18 +157,6 @@ class _AppDrawerState extends State<AppDrawer> {
                 icon: Icons.link_outlined,
                 title: 'الروابط الحية',
                 onTap: () => Navigator.pop(context),
-              ),
-              _buildDrawerItem(
-                context,
-                icon: Icons.undo,
-                title: 'استرداد',
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const RetrieveScreen()),
-                  );
-                },
               ),
               const Spacer(),
               Padding(

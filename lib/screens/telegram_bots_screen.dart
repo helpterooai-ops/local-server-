@@ -1,139 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class TelegramBotsScreen extends StatefulWidget {
+class TelegramBotsScreen extends StatelessWidget {
   const TelegramBotsScreen({super.key});
-
-  @override
-  State<TelegramBotsScreen> createState() => _TelegramBotsScreenState();
-}
-
-class _TelegramBotsScreenState extends State<TelegramBotsScreen> {
-  static const platform = MethodChannel('com.bot_maker/python_channel');
-
-  final TextEditingController _tokenController = TextEditingController();
-  final TextEditingController _codeController = TextEditingController();
-  
-  bool _isLoading = false;
-  bool _isRunning = false;
-  bool _isTestMode = false;
-  String? _consoleMessage;
-
-  // دوال الحفظ والاسترجاع
-  Future<void> _saveData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('bot_token', _tokenController.text);
-    await prefs.setString('bot_code', _codeController.text);
-    await prefs.setBool('bot_is_test_mode', _isTestMode);
-  }
-
-  Future<void> _saveRunningState(bool running) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('bot_is_running', running);
-  }
-
-  Future<void> _loadData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _tokenController.text = prefs.getString('bot_token') ?? '';
-      _codeController.text = prefs.getString('bot_code') ?? _codeController.text;
-      _isTestMode = prefs.getBool('bot_is_test_mode') ?? false;
-      // لا نستعيد حالة التشغيل تلقائيًا لأنها قد تكون غير دقيقة
-      // بعد إعادة تشغيل التطبيق
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-    // حفظ أي تغيير يطرأ على النصوص
-    _tokenController.addListener(_saveData);
-    _codeController.addListener(_saveData);
-  }
-
-  @override
-  void dispose() {
-    _tokenController.removeListener(_saveData);
-    _codeController.removeListener(_saveData);
-    _tokenController.dispose();
-    _codeController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _toggleBot() async {
-    setState(() {
-      _isLoading = true;
-      _consoleMessage = null;
-    });
-
-    try {
-      if (_isRunning) {
-        // إيقاف البوت
-        final result = await platform.invokeMethod('stopPythonBot');
-        setState(() {
-          _isRunning = false;
-          _consoleMessage = result;
-        });
-        _saveRunningState(false);
-      } else {
-        // التحقق من التوكن
-        final token = _tokenController.text.trim();
-        if (token.isEmpty) {
-          setState(() => _consoleMessage = 'الرجاء إدخال توكن البوت أولاً.');
-          return;
-        }
-
-        String finalCodeToRun = "";
-
-        // تحديد الكود الذي سيتم تشغيله بناءً على وضع التجربة
-        if (_isTestMode) {
-          // كود تجريبي مدمج لتجربة البوت فقط
-          finalCodeToRun = '''
-import telebot
-TOKEN = "$token"
-bot = telebot.TeleBot(TOKEN)
-
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    bot.reply_to(message, "مرحباً! البوت يعمل بنجاح من داخل [وضع التجربة]! 🧪🚀")
-
-@bot.message_handler(func=lambda message: True)
-def echo_all(message):
-    bot.reply_to(message, "[وضع التجربة].. أنت قلت: " + message.text)
-
-bot.infinity_polling()
-          ''';
-        } else {
-          // استخدام كود المستخدم مع حقن التوكن في بدايته
-          final userCode = _codeController.text.trim();
-          if (userCode.isEmpty) {
-            setState(() => _consoleMessage = 'الرجاء إدخال كود بايثون.');
-            return;
-          }
-          finalCodeToRun = 'TOKEN = "$token"\n' + userCode;
-        }
-
-        // تشغيل الكود المختار
-        final result = await platform.invokeMethod('runPythonBot', {'code': finalCodeToRun});
-        setState(() {
-          _isRunning = true;
-          _consoleMessage = result;
-        });
-        _saveRunningState(true);
-      }
-    } on PlatformException catch (e) {
-      setState(() {
-        _consoleMessage = 'خطأ: ${e.message}';
-        _isRunning = false;
-      });
-      _saveRunningState(false);
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,7 +13,7 @@ bot.infinity_polling()
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'استضافة بوت بايثون',
+          'بوتات تيليجرام',
           style: GoogleFonts.ibmPlexSansArabic(
             textStyle: textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
@@ -153,204 +22,58 @@ bot.infinity_polling()
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. حقل إدخال التوكن (منفصل)
-            TextField(
-              controller: _tokenController,
-              textDirection: TextDirection.ltr,
-              enabled: !_isRunning,
-              decoration: InputDecoration(
-                labelText: 'Bot Token',
-                labelStyle: GoogleFonts.ibmPlexSansArabic(),
-                hintText: '123456:ABC-DEF1234gh...',
-                hintStyle: GoogleFonts.ibmPlexSansArabic(
-                  color: colorScheme.onSurface.withValues(alpha: 0.3),
-                ),
-                prefixIcon: const Icon(Icons.vpn_key_outlined),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: colorScheme.primary,
-                    width: 2,
-                  ),
-                ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.smart_toy_outlined,
+                size: 64,
+                color: colorScheme.primary.withValues(alpha: 0.3),
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // 2. مفتاح وضع التجربة (Switch)
-            Container(
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _isTestMode ? colorScheme.primary : Colors.transparent,
-                  width: 1,
-                ),
-              ),
-              child: SwitchListTile(
-                title: Text(
-                  'وضع التجربة (اختبار الاتصال)',
-                  style: GoogleFonts.ibmPlexSansArabic(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                subtitle: Text(
-                  'تجاهل الكود بالأسفل وتشغيل كود افتراضي للرد على الرسائل.',
-                  style: GoogleFonts.ibmPlexSansArabic(
-                    fontSize: 12,
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                ),
-                value: _isTestMode,
-                activeColor: colorScheme.primary,
-                onChanged: _isRunning
-                    ? null
-                    : (val) {
-                        setState(() {
-                          _isTestMode = val;
-                          _saveData(); // حفظ مباشر
-                        });
-                      },
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 3. محرر الأكواد
-            Row(
-              children: [
-                Icon(Icons.code, size: 20, color: colorScheme.onSurface.withValues(alpha: 0.7)),
-                const SizedBox(width: 8),
-                Text(
-                  'كود البوت (Python):',
-                  style: GoogleFonts.ibmPlexSansArabic(
-                    fontWeight: FontWeight.w600,
-                    color: _isTestMode
-                        ? colorScheme.onSurface.withValues(alpha: 0.4)
-                        : colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: IgnorePointer(
-                ignoring: _isTestMode || _isRunning,
-                child: AnimatedOpacity(
-                  opacity: _isTestMode ? 0.4 : 1.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E1E),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _isTestMode ? Colors.transparent : colorScheme.outlineVariant.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _codeController,
-                      maxLines: null,
-                      expands: true,
-                      textDirection: TextDirection.ltr,
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        color: Colors.greenAccent,
-                        fontSize: 14,
-                        height: 1.5,
-                      ),
-                      decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.all(16),
-                        border: InputBorder.none,
-                        hintText: 'اكتب كود بايثون هنا...',
-                        hintStyle: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 4. شاشة الكونسول (الرسائل)
-            if (_consoleMessage != null)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: _isRunning
-                      ? const Color(0xFF38A169).withValues(alpha: 0.1)
-                      : const Color(0xFFE53E3E).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _isRunning
-                        ? const Color(0xFF38A169).withValues(alpha: 0.3)
-                        : const Color(0xFFE53E3E).withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      _isRunning ? Icons.check_circle_outline : Icons.error_outline,
-                      color: _isRunning ? const Color(0xFF38A169) : const Color(0xFFE53E3E),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _consoleMessage!,
-                        style: GoogleFonts.ibmPlexSansArabic(
-                          color: _isRunning ? const Color(0xFF38A169) : const Color(0xFFE53E3E),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            // 5. زر التشغيل/الإيقاف
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: _isLoading ? null : _toggleBot,
-                icon: Icon(
-                  _isRunning ? Icons.stop_circle_outlined : Icons.play_circle_outline,
-                  size: 22,
-                ),
-                label: Text(
-                  _isRunning ? 'إيقاف البوت' : 'تشغيل البوت',
-                  style: GoogleFonts.ibmPlexSansArabic(
+              const SizedBox(height: 24),
+              Text(
+                'بوتات تيليجرام',
+                style: GoogleFonts.ibmPlexSansArabic(
+                  textStyle: textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w700,
-                    fontSize: 16,
+                    color: colorScheme.onSurface,
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isRunning ? const Color(0xFFE53E3E) : colorScheme.primary,
-                  foregroundColor: Colors.white,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'سيتم إضافة إمكانية تشغيل وإدارة بوتات\nتيليجرام مباشرة من هاتفك.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.ibmPlexSansArabic(
+                  textStyle: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              OutlinedButton.icon(
+                onPressed: () {
+                  // TODO: فتح صفحة إضافة بوت جديد لاحقاً
+                },
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(
+                  'إضافة بوت جديد',
+                  style: GoogleFonts.ibmPlexSansArabic(fontWeight: FontWeight.w600),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colorScheme.primary,
+                  side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.3)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

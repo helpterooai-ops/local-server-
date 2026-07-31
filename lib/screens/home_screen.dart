@@ -1,13 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/app_drawer.dart' as drawer_widget; // استيراد مستعار لتجنب التعارض
-import '../services/local_server_service.dart';
-import '../services/telegram_service.dart';
+import '../widgets/app_drawer.dart';
 import 'web_hosting_screen.dart';
 import 'telegram_bots_screen.dart';
 import 'file_manager_screen.dart';
-import 'live_tunnels_screen.dart' as live_tunnels;
+import 'live_tunnels_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,38 +14,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+class _HomeScreenState extends State<HomeScreen> {
+  final bool _isServerRunning = false;
   final double _storageUsed = 0.0;
   final int _activeTunnels = 0;
-  bool _isServerActive = LocalServerService().isRunning;
-  bool _isBotActive = TelegramBotService().isRunning;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _refreshServerStatus();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _refreshServerStatus();
-    }
-  }
-
-  void _refreshServerStatus() {
-    setState(() {
-      _isServerActive = LocalServerService().isRunning;
-      _isBotActive = TelegramBotService().isRunning;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      drawer: drawer_widget.AppDrawer(), // تم إزالة const هنا لإصلاح الخطأ
+      drawer: const AppDrawer(),
       appBar: AppBar(
         title: Text(
           'لوحة التحكم',
@@ -85,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ✅ ترحيب بالاسم الحقيقي
             Text(
               'مرحباً، $userName 👋',
               style: GoogleFonts.ibmPlexSansArabic(
@@ -109,9 +80,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 _buildStatCard(
                   context,
                   title: 'حالة الخادم',
-                  value: _isServerActive ? 'يعمل' : 'متوقف',
+                  value: _isServerRunning ? 'يعمل' : 'متوقف',
                   icon: Icons.dns_outlined,
-                  valueColor: _isServerActive
+                  valueColor: _isServerRunning
                       ? const Color(0xFF38A169)
                       : const Color(0xFFE53E3E),
                 ),
@@ -142,15 +113,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               context,
               icon: Icons.code_rounded,
               title: 'محرر الأكواد',
-              subtitle: _isServerActive ? 'الخادم نشط الآن' : 'استضافة مواقع ويب تفاعلية',
-              color: _isServerActive ? const Color(0xFF38A169) : const Color(0xFF3182CE),
-              isActive: _isServerActive,
-              onTap: () async {
-                await Navigator.push(
+              subtitle: 'استضافة مواقع ويب تفاعلية',
+              color: const Color(0xFF3182CE),
+              onTap: () {
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const WebHostingScreen()),
                 );
-                _refreshServerStatus();
               },
             ),
             const SizedBox(height: 12),
@@ -158,15 +127,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               context,
               icon: Icons.smart_toy_outlined,
               title: 'بوتات تيليجرام',
-              subtitle: _isBotActive ? 'بوت نشط يعمل الآن' : 'تشغيل بوتات محلية في الخلفية',
-              color: _isBotActive ? const Color(0xFF38A169) : const Color(0xFF00A3C4),
-              isActive: _isBotActive,
-              onTap: () async {
-                await Navigator.push(
+              subtitle: 'تشغيل بوتات محلية في الخلفية',
+              color: const Color(0xFF00A3C4),
+              onTap: () {
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const TelegramBotsScreen()),
                 );
-                _refreshServerStatus();
               },
             ),
             const SizedBox(height: 12),
@@ -193,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => live_tunnels.LiveTunnelsScreen()),
+                  MaterialPageRoute(builder: (context) => const LiveTunnelsScreen()),
                 );
               },
             ),
@@ -331,103 +298,65 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     required String title,
     required String subtitle,
     required Color color,
-    bool isActive = false,
     required VoidCallback onTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 2),
-      decoration: BoxDecoration(
+    return Card(
+      elevation: 2,
+      shadowColor: color.withValues(alpha: 0.08),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        border: isActive
-            ? Border.all(
-                color: const Color(0xFF38A169).withValues(alpha: 0.6),
-                width: 2,
-              )
-            : null,
-        boxShadow: isActive
-            ? [
-                BoxShadow(
-                  color: const Color(0xFF38A169).withValues(alpha: 0.15),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                )
-              ]
-            : [
-                BoxShadow(
-                  color: color.withValues(alpha: 0.08),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                )
-              ],
-      ),
-      child: Card(
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: color, size: 26),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: GoogleFonts.ibmPlexSansArabic(
-                          textStyle:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: Theme.of(context).colorScheme.onSurface,
-                                  ),
-                        ),
+                child: Icon(icon, color: color, size: 26),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.ibmPlexSansArabic(
+                        textStyle:
+                            Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: GoogleFonts.ibmPlexSansArabic(
-                          textStyle:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.5),
-                                  ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isActive)
-                  Container(
-                    width: 12,
-                    height: 12,
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF38A169),
-                      shape: BoxShape.circle,
                     ),
-                  ),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.ibmPlexSansArabic(
+                        textStyle:
+                            Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.5),
+                                ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+              ),
+            ],
           ),
         ),
       ),

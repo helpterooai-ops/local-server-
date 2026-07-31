@@ -5,12 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/verification_screen.dart';
-import 'services/background_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await BackgroundServerService().initialize();
   runApp(const PocketCloudApp());
 }
 
@@ -76,6 +74,7 @@ class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
+      // ✅ تم التغيير إلى userChanges لتتبع تحديثات emailVerified
       stream: FirebaseAuth.instance.userChanges(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
